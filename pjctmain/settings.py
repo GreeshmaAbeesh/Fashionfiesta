@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pjctapp'
+    'category',
+    'accounts',
+    'store',
 ]
 
 MIDDLEWARE = [
@@ -70,6 +72,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pjctmain.wsgi.application'
 
+AUTH_USER_MODEL = 'accounts.Account'
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -77,7 +81,7 @@ WSGI_APPLICATION = 'pjctmain.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'review',
+        'NAME': 'fashionfiesta',
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',    # Set to your database host if not running locally
@@ -125,6 +129,8 @@ STATICFILES_DIRS=[
     'pjctmain/static',
 ]
 
+MEDIA_URL='/media/'
+MEDIA_ROOT=BASE_DIR /'media'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
