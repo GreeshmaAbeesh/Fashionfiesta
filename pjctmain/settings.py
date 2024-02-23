@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'category',
     'accounts',
-    'store',
+    'stor',
 ]
 
 MIDDLEWARE = [
@@ -133,5 +133,20 @@ MEDIA_URL='/media/'
 MEDIA_ROOT=BASE_DIR /'media'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
+
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.ERROR: "danger",         # for showing seperate messages from django framework
+    
+}
+
+# SMTP configuration .     SMTP (Simple Mail Transfer Protocol) configuration, which is commonly used for sending emails in a Python application.
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587    #The port number used for connecting to the SMTP server. For Gmail with TLS, the common port is 587.
+EMAIL_HOST_USER = 'greeshmaps1992@gmail.com'
+EMAIL_HOST_PASSWORD = 'hppq suyn arls uqf'
+EMAIL_USE_TLS = True    #This is a boolean indicating whether to use TLS (Transport Layer Security) when connecting to the SMTP server. 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
