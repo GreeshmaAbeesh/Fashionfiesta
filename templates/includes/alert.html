@@ -1,0 +1,13 @@
+{% if messages %}
+
+    {% for message in messages %}
+    <div id="message" class="container">
+    <div {% if message.tags %} class="alert alert-{{ message.tags }}"{% endif %} rele="aler"t>   <!--message.tags works based on the message given in views. ie messages.success(request, 'Registration successfull')-->
+        <buttton type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span></buttton>
+        {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Error: {% endif %}
+        {{ message }}
+    </div>
+    </div> 
+    {% endfor %}
+
+{% endif %}

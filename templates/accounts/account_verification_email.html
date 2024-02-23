@@ -1,0 +1,8 @@
+{% autoescape off %}   <!--gives protection with cross site scripting when we pass activation email--> 
+
+Please click on below link to confirm your registration.
+<a href="http://{{ domain }}{% url 'activate' uidb64=uid token=token %}">Activate your account</a>
+
+If you think its not you,please ignore this email.
+
+{% endautoescape %}
