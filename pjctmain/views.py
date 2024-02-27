@@ -1,11 +1,10 @@
 from django.shortcuts import render
-from stor.models import Product,ProductImage
+from storeitem.models import PopularProduct
 
 def home(request):
-    products = Product.objects.all().filter(is_available=True)
-    product_images = ProductImage.objects.filter(product__in=products)
+    products = PopularProduct.objects.all().filter(is_available=True)
 
     context = {
-        'products' : zip(products,product_images)
+        'products' : products,
     }
     return render(request,'home.html',context)

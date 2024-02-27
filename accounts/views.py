@@ -6,12 +6,12 @@ from django.views.decorators.cache import never_cache
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User,auth
 from django.contrib.auth.decorators import login_required
-
+from django.http import HttpResponse
 # verification email
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
-from django.utils.encoding import force_bytes
+from django.utils.encoding import force_bytes,force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 
@@ -41,22 +41,39 @@ def register(request):
                 'user' : user,
                 'domain':current_site,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # here encoding the primary key and nobody can see it and it decode when it activate
-                'token' : default_token_generator.make_token(user)    #make token create token and pass to the user
+                'token' : default_token_generator.make_token(user)    # make token create token and pass to the user
             })
             to_email = email  # we got email from user and send to it
             send_email = EmailMessage(mail_subject, message ,to=[to_email])
             send_email.send()
 
-            messages.success(request, 'Registration successfull')
-            return redirect('register')
+            #messages.success(request, 'Thank you for your registration.Please verify with the link in your gmail')
+            return redirect('/accounts/login/?command=verification&email='+email)
     else:
         form = Registrationform()
     context = {
         'form' : form,  # form variable available in register.html
     }
     return render(request,'accounts/register.html',context)
+
+'''
+def activate(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = Account.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        # Activate the user
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Your account has been activated. You can now log in.')
+        return redirect('login')
+    else:
+        return HttpResponse('Activation link is invalid or expired.')
                   
-''' 
+
 def login(request):
     if request.method == 'POST':
         email=request.POST['email']
@@ -101,5 +118,19 @@ def logout(request):
 
 
 
-def activate(request):
-    return
+def activate(request,uidb64,token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()   # decode the uidb and the value store in uid and it become primary key of user
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, 'Congratulations your account is activated.' )
+        return redirect('login')
+    else:
+        messages.error(request, 'Invalid activation link.' )
+        return redirect('register')
+

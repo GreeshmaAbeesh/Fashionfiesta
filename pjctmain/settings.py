@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'category',
     'accounts',
-    'stor',
+    'storeitem',
 ]
 
 MIDDLEWARE = [
@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'category.context_processors.menu_links',  # this menu_link available to all the templates.for that we using context processors
             ],
         },
     },
@@ -81,7 +82,7 @@ AUTH_USER_MODEL = 'accounts.Account'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fashionfiesta',
+        'NAME': 'fashionfiestanew',
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',    # Set to your database host if not running locally
@@ -146,7 +147,8 @@ MESSAGE_TAGS = {
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587    #The port number used for connecting to the SMTP server. For Gmail with TLS, the common port is 587.
 EMAIL_HOST_USER = 'greeshmaps1992@gmail.com'
-EMAIL_HOST_PASSWORD = 'hppq suyn arls uqf'
+EMAIL_HOST_PASSWORD = 'ffxbnxqquhraquxt'
 EMAIL_USE_TLS = True    #This is a boolean indicating whether to use TLS (Transport Layer Security) when connecting to the SMTP server. 
+#EMAIL_USE_SSL = 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
