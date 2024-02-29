@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'category',
     'accounts',
     'storeitem',
+    'cart',
 ]
 
 MIDDLEWARE = [
@@ -66,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'category.context_processors.menu_links',  # this menu_link available to all the templates.for that we using context processors
+                'cart.context_processors.counter',
             ],
         },
     },

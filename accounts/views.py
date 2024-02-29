@@ -134,3 +134,70 @@ def activate(request,uidb64,token):
         messages.error(request, 'Invalid activation link.' )
         return redirect('register')
 
+
+
+def forgotpassword(request):
+    if request.method == 'POST':
+        email =  request.POST['email']    #this email we get from forgotpassword form
+        if Account.objects.filter(email=email).exists():
+            user=Account.objects.get(email__exact=email)
+
+            #Reset password email(same as email activation)
+            current_site = get_current_site(request)
+            mail_subject = 'Reset your password'
+            message = render_to_string('accounts/reset_password_email.html',{
+                'user' : user,
+                'domain':current_site,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # here encoding the primary key and nobody can see it and it decode when it activate
+                'token' : default_token_generator.make_token(user)    # make token create token and pass to the user
+            })
+            to_email = email  # we got email from user and send to it
+            send_email = EmailMessage(mail_subject, message ,to=[to_email])
+            send_email.send()
+
+            messages.success(request,'Resetting password sent to your email')
+            return redirect('login')
+        else:
+            messages.error(request,'Account does not exist')
+            return redirect('forgotpassword')
+
+    return render(request, 'accounts/forgotpassword.html')
+
+
+def resetpassword_validate(request,uidb64,token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()   # decode the uidb and the value store in uid and it become primary key of user
+        user = Account._default_manager.get(pk=uid)
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        request.session['uid'] = uid     #save uid here because we use this uid when reset password
+        messages.success(request,'Reset your password')
+        return redirect('resetpassword')
+    else:
+        messages.error(request,'This link has been expired!') 
+        return redirect('login')
+    
+
+def resetpassword(request):
+    if request.method == 'POST':
+        password = request.POST['password']                  # for reset- uid saved only when you coming through validation link
+        confirm_password = request.POST['confirm_password']
+
+        if password == confirm_password:
+            uid = request.session.get('uid')   # for taking saved uid
+            user = Account.objects.get(pk=uid)
+            user.set_password(password)                   #we need to set password because simple saving makes error in django. if you set password ,django's inbuilt function take the password and save it in hash format
+            user.save()
+            messages.success(request,'Password Reset Successfully')
+            return redirect('login')
+        else:
+            messages.error(request,'Password not matching')
+            return redirect('resetpassword')
+    
+    else:
+        return render(request, 'accounts/resetpassword.html')   # is the methosd is not POST this template will load
+
+
+

@@ -17,7 +17,7 @@ class PopularProduct(models.Model):
 
 #this is used to make the product_details link working while clicking on the product name. 
     def get_url(self):
-        return reverse('product_detail',args=[self.category.slug,self.slug]) # here product detail means name of the path and pass two argumenta in list . ie category slug and product slug. self means popularproduct.self.category.slud means , category in self model and usind forign key it access category slug. self.slug means product slug
+        return reverse('product_detail',args=[self.category.slug,self.slug]) # here product detail means name of the path and pass two arguments in list . ie category slug and product slug. self means popularproduct.self.category.slud means , category in self model and usind forign key it access category slug. self.slug means product slug
 
 
     def __str__(self):

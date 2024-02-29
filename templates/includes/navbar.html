@@ -79,9 +79,9 @@
                         </div>
 
                         {% endif %}
-                        <a href="./cart.html" class="widget-header pl-3 ml-3">
+                        <a href="{% url 'cart' %}" class="widget-header pl-3 ml-3">  <!--once you click on the cart button, goes to the cart page-->
                             <div class="icon icon-sm rounded-circle border"><i class="fa fa-shopping-cart"></i></div>
-                            <span class="badge badge-pill badge-danger notify">0</span>
+                            <span class="badge badge-pill badge-danger notify">{{cart_count}}</span>  <!--   # here shopping cart icon we pass count of item added.cart_cont from context_processor in cart-->
                         </a>
                     </div> <!-- widgets-wrap.// -->
                 </div> <!-- col.// -->
