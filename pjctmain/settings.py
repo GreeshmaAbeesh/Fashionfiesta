@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'admin_soft.apps.AdminSoftDashboardConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +42,19 @@ INSTALLED_APPS = [
     'accounts',
     'storeitem',
     'cart',
+    'django_otp.plugins.otp_totp',
+    'django_otp',
+    #'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    #'allauth.socialaccount.providers.google',
+    #'allauth.socialaccount.providers.facebook',
+    #'custom_admin',
+    
+    
+    
+    
 ]
 
 MIDDLEWARE = [
@@ -51,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware', 
 ]
 
 ROOT_URLCONF = 'pjctmain.urls'
@@ -68,6 +83,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'category.context_processors.menu_links',  # this menu_link available to all the templates.for that we using context processors
                 'cart.context_processors.counter',
+                
             ],
         },
     },
@@ -75,7 +91,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pjctmain.wsgi.application'
 
-AUTH_USER_MODEL = 'accounts.Account'
+AUTH_USER_MODEL ='accounts.Account'
 
 
 # Database
@@ -130,7 +146,10 @@ STATIC_URL = '/static/'
 STATIC_ROOT=BASE_DIR /'static'
 STATICFILES_DIRS=[
     'pjctmain/static',
+    #'custom_admin/static',
 ]
+
+
 
 MEDIA_URL='/media/'
 MEDIA_ROOT=BASE_DIR /'media'
@@ -154,3 +173,22 @@ EMAIL_USE_TLS = True    #This is a boolean indicating whether to use TLS (Transp
 #EMAIL_USE_SSL = 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SUPERUSER_USERNAME = 'greeshma'
+SUPERUSER_PASSWORD = 'greeshma' 
+
+
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+
+]
+
+
+
+#LOGIN_REDIRECT_URL = 'home'

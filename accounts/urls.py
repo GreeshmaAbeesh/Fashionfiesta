@@ -1,5 +1,8 @@
 from django.urls import path
-from .import views
+from .import views 
+
+
+
 
 urlpatterns =[
     path('register/',views.register,name='register'),
@@ -9,5 +12,5 @@ urlpatterns =[
     path('forgotpassword/',views.forgotpassword,name='forgotpassword'),
     path('resetpassword_validate/<uidb64>/<token>/',views.resetpassword_validate,name='resetpassword_validate'),
     path('resetpassword/',views.resetpassword,name='resetpassword'),
-
+    path('otp_verification/', views.otp_verification, name='otp_verification'),
 ]

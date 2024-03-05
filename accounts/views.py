@@ -1,3 +1,4 @@
+
 from django.shortcuts import render,redirect
 from .forms import Registrationform
 from .models import Account
@@ -14,6 +15,10 @@ from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from django.utils.encoding import force_bytes,force_str
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
+import random
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
+from datetime import datetime,timedelta
 
 # Create your views here.
 
@@ -93,20 +98,102 @@ def login(request):
 
 def login(request):
      
-     if request.method=='POST':
-          email=request.POST['email']
-          password=request.POST['password']
+    if request.method=='POST':
+        print("inside post")
+        email=request.POST['email']
+        password=request.POST['password']
 
-          user=auth.authenticate(email=email,password=password)
-          
-          if user is not None:
-              auth.login(request,user)
-              return redirect('home')
-          else:
-              messages.error(request,'Invalid Username or password')
-              return redirect('login')
-     else:
-       return render(request,"accounts/login.html")
+        user=auth.authenticate(email=email,password=password)
+
+    
+        if user is not None:  # user is not none : here user means a user who exist after authenticated username and password
+            print("inside user")
+           
+            request.session['email']=email
+            request.session['password']=password
+            print("before sent otp")
+            send_otp(request)
+            print("before render to otp.html")
+            return render(request,"accounts/otp.html",{'email':email})
+        else:
+            messages.error(request,'Invalid Username or password')
+            return redirect('login')
+    else:
+        print("else post")
+        return render(request,"accounts/login.html")
+    
+
+
+'''
+def send_otp(request):
+    s=""
+    for x in range(0,4):
+        s+=str(random.randint(0,9))
+    request.session["otp"]=s
+    send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
+    return render(request,"accounts/otp.html")
+'''
+
+
+def send_otp(request):
+    otp=''.join(str(random.randint(0,9)) for _ in range(4))
+
+    # store otp and its expiration time session
+    otp_expiration_time = datetime.now() + timedelta(minutes=1)
+
+     # Convert the expiration time to a string for serialization
+    otp_expiration_str = otp_expiration_time.isoformat()
+
+    request.session["otp"] = {
+        "value" : otp,
+        "expiration_time" : otp_expiration_str,
+    }
+
+    #Send otp via email
+    send_mail("OTP for sign up",otp,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
+
+    return render(request,"accounts/otp.html")
+
+
+
+
+def otp_verification(request):
+    if request.method=="POST":
+        print("otp verification")
+        otp_=request.POST.get("otp")
+        print(otp_)
+        stored_otp_data = request.session.get("otp")
+
+        if stored_otp_data:
+            stored_otp = stored_otp_data.get("value")
+            expiration_time_str = stored_otp_data.get("expiration_time")
+
+            # Convert the expiration time string back to datetime
+
+            expiration_time = datetime.fromisoformat(expiration_time_str)
+
+            # Check if the current time is later than the expiration time
+            if datetime.now() > expiration_time:
+                messages.error(request,"OTP has expired.Please request a new otp.")
+                return redirect('login')
+        
+            if otp_==stored_otp:
+                print("entered to make_password")
+                messages.info(request,"signed successfully...")
+                #print("signed succesfully")
+                User.is_active=True
+                #print("Request:", request.__dict__)
+                user=auth.authenticate(email=request.session['email'],password=request.session['password'])
+                auth.login(request,user)
+                return redirect('home')
+            else:
+                messages.error(request,"otp doesn't match")
+                print("OTP not matched")
+                return redirect('login')
+    print("Not OTP post case") 
+    return render(request,"accounts/otp.html")
+
+     
 
 
 @login_required(login_url='login') # we can logged out the system when you are log in.
@@ -198,6 +285,7 @@ def resetpassword(request):
     
     else:
         return render(request, 'accounts/resetpassword.html')   # is the methosd is not POST this template will load
+    
 
 
 

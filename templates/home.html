@@ -22,8 +22,13 @@
 <div class="container">
 
 <header class="section-heading">
-	<a href="{% url 'store' %}" class="btn btn-outline-primary float-right">See all</a>   <!--while clicking see all, it goes to store page-->
-	<h3 class="section-title">Popular products</h3>
+	{% if user.is_authenticated %}
+		<a href="{% url 'store' %}" class="btn btn-outline-primary float-right">See all</a>   <!--while clicking see all, it goes to store page-->
+		<h3 class="section-title">Popular products</h3>
+    {% else %}
+		<a href="#" class="btn btn-outline-primary float-right">See all</a>   
+		<h3 class="section-title">Popular products</h3>
+	{% endif %}
 </header><!-- sect-heading -->
 
 	
@@ -31,11 +36,20 @@
 	{% for product in products|slice:":8" %}   <!--in the pjctmain views we create an instance named products for PopularProduct.thatswhy here forloop takes products and |slice:":8" is used to get only first 8 products as popularproducts-->
 	<div class="col-md-3">
 		<div class="card card-product-grid">
-			<a href="{{ product.get_url }}" class="img-wrap"> <img src="{{ product.images.url}}"> </a>
+			{% if user.is_authenticated %}
+				<a href="{{ product.get_url }}" class="img-wrap"> <img src="{{ product.images.url}}"> </a>
+				<figcaption class="info-wrap">
+					<a href="{{ product.get_url }}" class="title">{{product.product_name}}</a>
+					<div class="price mt-1">₹{{product.price}}</div> <!-- price-wrap.// -->
+				</figcaption>
+			{% else %}
+			<a href="#" class="img-wrap"> <img src="{{ product.images.url}}"> </a>
 			<figcaption class="info-wrap">
-				<a href="{{ product.get_url }}" class="title">{{product.product_name}}</a>
+				<a href="#" class="title">{{product.product_name}}</a>
 				<div class="price mt-1">₹{{product.price}}</div> <!-- price-wrap.// -->
 			</figcaption>
+			{% endif %}
+				
 		</div>
 	</div> <!-- col.// -->
 	{% endfor %}

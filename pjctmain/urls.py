@@ -19,6 +19,8 @@ from django.urls import path,include
 from .import views
 from django.conf.urls.static import static
 from django.conf import settings
+#from django.views.generic import TemplateView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +28,9 @@ urlpatterns = [
     path('store/',include('storeitem.urls')),
     path('accounts/',include('accounts.urls')),
     path('cart/',include('cart.urls')),
+    path('', include('admin_soft.urls')),
+    #path('dj-admin/',include('custom_admin.urls')),
+    path('accounts/', include('allauth.urls')),
+    #path('home/', TemplateView.as_view(template_name='accounts/login.html',name='login'))
+  
  ]+ static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

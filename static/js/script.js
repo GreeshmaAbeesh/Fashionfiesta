@@ -58,3 +58,6 @@ $(document).ready(function() {
 }); 
 // jquery end
 
+setTimeout(function(){
+    $('#message').fadeOut('slow')       
+},4000)                                   // this is for fade the registration succussfull box after 4 min

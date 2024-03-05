@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="section-conten padding-y" style="min-height: 84vh">
+    <div class="card mx-auto" style="max-width: 500px; margin-top: 100px;">
+        <div class="card-body">
+            {% include 'includes/alert.html' %}
+            <h4 class="card-title mb-4">OTP Verification</h4>
+
+            <form method="post" action="{% url 'verify_otp_registration' user_id=user.id %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="otp">Enter OTP sent to your email:</label>
+                    <input type="text" class="form-control" id="otp" name="otp" placeholder="Enter OTP" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
