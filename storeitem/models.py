@@ -24,6 +24,35 @@ class PopularProduct(models.Model):
         return self.product_name
 
 
+class VariationManager(models.Manager):
+    def colors(self):
+        return super(VariationManager,self).filter(variation_category='color',is_active = True)
+    
+    def sizes(self):
+        return super(VariationManager,self).filter(variation_category='size',is_active = True)
+
+
+#These choices are used to create a dropdown menu or radio button options when interacting with the field in forms or the Django admin interface.
+
+variation_category_choice = (
+    ('color','color'),   #This is a tuple representing one choice. The first element ('color') is the value stored in the database, and the second element ('color') is a human-readable description or label.
+    ('size','size'),
+)
+
+
+class Variation(models.Model):
+    product = models.ForeignKey(PopularProduct, on_delete=models.CASCADE)
+    variation_category = models.CharField(max_length=100, choices=variation_category_choice)
+    variation_value = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    created_date = models.DateTimeField(auto_now=True)
+
+
+    objects = VariationManager()
+
+    def __str__(self):
+        return self.variation_value
+
 
 
 class ProductGallery(models.Model):

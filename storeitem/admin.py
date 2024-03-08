@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PopularProduct,ProductGallery
+from .models import PopularProduct,ProductGallery,Variation
 
 
 # Register your models here.
@@ -15,5 +15,13 @@ class PopularProductAdmin(admin.ModelAdmin):
     prepopulated_fields={'slug':('product_name',)}
     inlines = [ProductGalleryInline]
 
+class VariationAdmin(admin.ModelAdmin):
+    list_display = ('product','variation_category','variation_value','is_active')
+    list_editable = ('is_active',)  # is active is editable in admin page andit must be a list or tuple
+    list_filter = ('product','variation_category','variation_value')
+
+
 admin.site.register(PopularProduct,PopularProductAdmin)
 admin.site.register(ProductGallery)
+admin.site.register(Variation,VariationAdmin)
+
