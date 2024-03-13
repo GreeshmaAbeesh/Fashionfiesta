@@ -20,6 +20,9 @@ from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
 from datetime import datetime,timedelta
 
+from cart.views import _cart_id
+from cart.models import Cart,CartItem
+
 # Create your views here.
 
 @never_cache
@@ -96,6 +99,7 @@ def login(request):
     return render(request,'accounts/login.html')
 '''
 
+
 def login(request):
      
     if request.method=='POST':
@@ -108,7 +112,7 @@ def login(request):
     
         if user is not None:  # user is not none : here user means a user who exist after authenticated username and password
             print("inside user")
-           
+
             request.session['email']=email
             request.session['password']=password
             print("before sent otp")
