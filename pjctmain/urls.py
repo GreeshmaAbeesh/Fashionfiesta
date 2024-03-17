@@ -32,5 +32,7 @@ urlpatterns = [
     #path('dj-admin/',include('custom_admin.urls')),
     path('accounts/', include('allauth.urls')),
     #path('home/', TemplateView.as_view(template_name='accounts/login.html',name='login'))
-  
+    
+    #orders
+    path('orders/',include('orders.urls')),
  ]+ static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

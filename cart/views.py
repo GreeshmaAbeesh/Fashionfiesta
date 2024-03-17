@@ -4,6 +4,7 @@ from .models import Cart,CartItem
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 # Create your views here.
 
 
@@ -20,6 +21,7 @@ def add_cart(request,product_id):
     # we get product variation here
     product_variation = []          # inside this list we have color and size
     if request.method == 'POST':
+        #quantity = int(request.POST.get('quantity',1))
         for item in request.POST:
             key = item            # if color is black,color will stored in the key
             value = request.POST[key]   # black is stored in the value
@@ -28,6 +30,7 @@ def add_cart(request,product_id):
 
             try:
                 variation = Variation.objects.get(product=product, variation_category__iexact=key,variation_value__iexact=value)
+                print('inside add cart',variation)
                 product_variation.append(variation)  # here insert values to a cart item
             except:
                 pass
@@ -43,10 +46,12 @@ def add_cart(request,product_id):
     cart.save()
 
     #we get cartitem
-
-    is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart).exists()
+    print("above is cartitem exist")
+    print('cart,user,product',cart,request.user,product)
+    is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart,user=request.user).exists()
     if is_cart_item_exists:
-        cart_item = CartItem.objects.filter(product=product,cart=cart)      # return cart item objects
+        print("inside is cartitem exist")
+        cart_item = CartItem.objects.filter(product=product,cart=cart,user=request.user)      # return cart item objects
         #existing variations from database
         #current variations in product_variation list
         # item_id from database
@@ -69,7 +74,7 @@ def add_cart(request,product_id):
         
         else:
             #create new cart item
-            item = CartItem.objects.create(product=product, quantity=1, cart=cart)
+            item = CartItem.objects.create(product=product, quantity=1, cart=cart,user=request.user)
             if len(product_variation)>0:   #if product variation list not empty
                 item.variations.clear()
                 item.variations.add(*product_variation) 
@@ -80,6 +85,7 @@ def add_cart(request,product_id):
             product = product,
             quantity = 1,      # 1 because it is new cartitem
             cart  = cart,
+            user = request.user,
         )
         if len(product_variation)>0:   #if product variation in empty list
             cart_item.variations.clear()
@@ -87,6 +93,13 @@ def add_cart(request,product_id):
         cart_item.save()
     return redirect('cart')
 
+'''
+def view_cart(request):
+    cart_items = CartItem.objects.filter(user=request.user)
+    # Your code to render the cart items goes here 
+    print('cart_items:',cart_items)
+    return render(request, 'store/cart.html', {'cart_items': cart_items})
+'''
 
 def remove_cart(request, product_id,cart_item_id):                        # this function is used to reduce cart item while clicking minus button
     cart = Cart.objects.get(cart_id=_cart_id(request))
@@ -110,7 +123,9 @@ def remove_cart_item(request, product_id,cart_item_id):
     cart_item = CartItem.objects.get(product=product , cart=cart,id=cart_item_id)
     cart_item.delete()
     return redirect('cart')
-        
+
+
+
         
     
 def cart(request, total=0, quantity=0, cart_items=None):           # to modify cart function and add items to cart
@@ -135,6 +150,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         'grand_total' : grand_total,
     }
     return render(request,'store/cart.html',context)   
+
 
 
 
