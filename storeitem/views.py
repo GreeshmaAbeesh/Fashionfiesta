@@ -1,12 +1,14 @@
-from django.shortcuts import render, get_object_or_404
-from storeitem.models import PopularProduct,ProductGallery
+from django.shortcuts import render, get_object_or_404,redirect
+from .models import PopularProduct,ProductGallery,ReviewRating
 from category.models import Category
 import os
 from cart.views import _cart_id
 from cart.models import Cart,CartItem
 from django.core.paginator import EmptyPage,PageNotAnInteger,Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseBadRequest
 from django.db.models import Q
+from .forms import ReviewForm
+from django.contrib import messages
 
 # Create your views here.
 
@@ -69,3 +71,66 @@ def search(request):
         'product_count' :  product_count,
     }
     return render(request, 'store/store.html',context)
+'''
+def submit_review(request, product_id):
+    # Get the product instance
+    product = get_object_or_404(PopularProduct, id=product_id)
+
+    if request.method == 'POST':
+        # Create or update review
+        try:
+            review = ReviewRating.objects.get(user=request.user, product=product)
+            form = ReviewForm(request.POST, instance=review)
+        except ReviewRating.DoesNotExist:
+            form = ReviewForm(request.POST)
+
+        if form.is_valid():
+            # Save the form data
+            form.instance.user = request.user
+            form.instance.product = product
+            form.save()
+            # Display success message
+            if review:
+                messages.success(request, 'Your review has been updated successfully.')
+            else:
+                messages.success(request, 'Your review has been submitted successfully.')
+            return redirect(request.META.get('HTTP_REFERER'))  # Redirect back to the previous page after submission
+        else:
+            # Form is invalid, show error messages
+            messages.error(request, 'Failed to submit review. Please check the form.')
+            # Optionally, print form errors for debugging
+            print(form.errors)
+            return HttpResponseBadRequest("Invalid form data")
+
+    # If request method is not POST, redirect to the product detail page
+    return redirect(product.get_url())
+'''
+
+def submit_review(request,product_id):
+    url = request.META.get('HTTP_REFERER') # THE REVIEWING PRODUCT URL STORED IN THIS url variable
+    print("product url:",url)
+    if request.method == 'POST':
+        try:
+            reviews = ReviewRating.objects.get(user__id=request.user.id,product__id=product_id)   #user__id means user id TAKEN FROM foriegn key Accounts, simlarly product__id taken from popularproducta using foreign key
+            form = ReviewForm(request.POST,instance=reviews)    # request.POST having all the data which we enter to rating & if already a review uploaded using instace we can update the review
+            form.save()
+            print("values of updated form",form)
+            messages.success(request,'Thank you! Your review has been updated.')
+            return redirect(url)
+        except ReviewRating.DoesNotExist:
+            form = ReviewForm(request.POST)
+            print("values of Reviewform",form)
+            if form.is_valid():
+                data = ReviewRating()
+                data.subject = form.cleaned_data['subject']
+                data.rating = form.cleaned_data['rating']
+                data.review = form.cleaned_data['review']
+                data.ip = request.META.get('REMOTE_ADDR')  #remote address store ip address
+                data.product_id=product_id
+                data.user_id = request.user.id
+                data.save()
+                print("values of data",data)
+                messages.success(request,'Thank you! Your review has been submitted.')
+                return redirect(url)
+    return HttpResponse("Error: Invalid request") 
+    

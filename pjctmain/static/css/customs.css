@@ -1,0 +1,48 @@
+/* Hide Radio button (hide if the radio button is more than input*/
+.rate > input {
+    display: none; 
+}
+
+.rate{
+    display: inline-block;
+    border: 0;
+
+}
+
+.rate > label {
+    float: right;
+}
+
+/* showing stars */
+
+.rate > label:before{
+    display: inline-block;
+    font-size: 1.1rem;
+    font-family: FontAwesome;
+    content: "\f005";
+    margin: 0;
+    padding: .3rem .2rem;
+    cursor: pointer;
+
+}
+
+
+/* Half star */
+.rate .half:before {
+    content: "\f089"; /* Unicode for half-star */
+    position: absolute;
+    padding-right: 0;
+}
+
+
+/* click and hover */
+input:checked ~ label,
+label:hover ~ label {
+color: #ffbb50;
+}
+
+/* hover highlight */
+input:checked +label:hover, input:checked ~ label:hover,input:checked ~ label:hover ~ label,
+label:hover, input:checked ~ label{
+    color:#cc9000;
+}

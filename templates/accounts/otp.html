@@ -1,4 +1,29 @@
+{% extends 'base.html' %}
 
+{% block content %}
+<br>
+<center><h7 style="color: cadetblue;">check inbox of your email {{email}} and enter the otp</h7></center>
+
+<section class="section-conten padding-y" style="min-height: 84vh">
+    <div class="card mx-auto" style="max-width: 500px; margin-top: 100px;">
+        
+        <div class="card-body">
+            {% include 'includes/alert.html' %}
+            <h4 class="card-title mb-4">OTP Verification</h4>
+            
+            <form action="{% url 'otp_verification' %}" method="POST">
+                {% csrf_token %}
+                <center>Enter the otp: <input type="text" placeholder="Enter the otp" name="otp"></center><br><br>
+                <center><button type="submit">verify</button></center>
+            </form>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+
+<!--
 <center><strong>CONFIRM YOR LOGIN</strong></center>
 
 <center><p>check inbox of your email-{{email}}-and enter the otp</p></center>
@@ -10,3 +35,4 @@
         <center><button type="submit">verify</button></center>
     </form>
 </body>
+-->
