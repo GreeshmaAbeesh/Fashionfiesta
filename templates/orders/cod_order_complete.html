@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="card">
+          <div class="card-header">Order Complete</div>
+          <div class="card-body">
+            {% if order %}
+              <h2>Your order has been placed successfully.</h2>
+              <p>Order ID: {{ order.id }}</p>
+              <p>Total Amount: ${{ order.order_total }}</p>
+              
+            {% else %}
+              <p>Sorry, we couldn't find the order. Please contact support for assistance.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

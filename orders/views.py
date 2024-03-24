@@ -215,6 +215,7 @@ def place_order(request, total=0, quantity=0):
                 'tax' : tax,
                 'grand_total' : grand_total,
             }
+            print('order number in place_order:',order_number)
             return render(request,'orders/payments.html',context)
         else:
             return redirect('checkout')
@@ -222,6 +223,7 @@ def place_order(request, total=0, quantity=0):
 
 def order_complete(request):
     order_number  = request.GET.get('order_number')
+    print('order_number in order_complete',order_number)
     transID = request.GET.get('payment_id')
     
     try:
@@ -245,4 +247,122 @@ def order_complete(request):
         return render(request,'orders/order_complete.html',context)
     except (Payment.DoesNotExist,Order.DoesNotExist):
         return redirect('home')
+    
+'''
+def cash_on_delivery(request):
+    if request.method == "POST":
+        # Assuming you have a form that submits the order id
+        order_id = request.POST.get('order_id')
+        order = Order.objects.get(id=order_id)
 
+        
+        # Create a Payment instance
+        payment = Payment.objects.create(
+            user=request.user,
+            payment_method='Cash on Delivery',
+            amount_paid= grand_total,
+            status='Pending'  # Assuming you initially set status as pending for cash on delivery orders
+        )
+
+        # Update the order with payment details
+        order.payment_id = payment
+        order.order_total = grand_total
+        order.tax = tax
+        order.status = 'Accepted'  # Assuming you change order status to accepted upon choosing cash on delivery
+        order.save()
+
+        # Mark order products as ordered
+        order_products = OrderProduct.objects.filter(order=order)
+        for order_product in order_products:
+            order_product.ordered = True
+            order_product.save()
+
+        return redirect('payment_successful')  # Redirect to payment successful page or any other page
+
+    return render(request, 'orders/cod_order_complete.html')
+
+def cash_on_delivery(request):
+    return render(request, 'orders/cod_order_complete.html')
+    '''
+'''
+def cash_on_delivery(request):
+    print('request',request.method)
+    if request.method == "POST":
+        order_number = request.POST.get('order_number')
+        print('order_number',order_number)
+        transID = request.POST.get('payment_id')
+        print('transID',transID)
+        
+        try:
+            order = Order.objects.get(order_number=order_number, is_ordered=False)
+            print("order",order)
+            order.is_ordered = True
+            order.save()
+
+            
+            context = {
+                'order': order,
+                'transID': transID,  # Pass payment ID to template context
+            }
+            return render(request, 'orders/cod_order_complete.html', context)
+        except Order.DoesNotExist:
+            # Handle case where order is not found
+            pass
+'''
+
+def cash_on_delivery(request):
+    print('request',request.method)
+    
+    if request.method == "POST":
+        order_number = request.POST.get('order_number')
+        print('order_number',order_number)
+        transID = request.POST.get('payment_id')
+        print('transID',transID)
+        
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=False)
+        cart = Cart.objects.get(cart_id=_cart_id(request))
+    except Cart.DoesNotExist:
+        # Redirect the user back to the store if the cart is empty or doesn't exist
+        return redirect('store')
+    
+    cart_items = CartItem.objects.filter(cart=cart)
+    print('cartitems: ',cart_items)
+
+
+    for item in cart_items:
+        orderproduct = OrderProduct()
+        orderproduct.order_id = order.id
+        
+        orderproduct.user_id = request.user.id
+        orderproduct.product_id = item.product_id
+        orderproduct.quantity = item.quantity
+        orderproduct.product_price = item.product.price
+        orderproduct.ordered = True
+        orderproduct.save()
+
+        cart_item = CartItem.objects.get(id=item.id)
+        product_variation = cart_item.variations.all()
+        orderproduct = OrderProduct.objects.get(id=orderproduct.id)
+        orderproduct.variations.set(product_variation)
+        orderproduct.save()
+
+    # Reduce the quantity of the sold products
+        product = PopularProduct.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save()
+
+    #clear the cart
+        
+    CartItem.objects.filter(user=request.user).delete()
+    order.is_ordered = True
+    order.save()
+
+   
+            
+    context = {
+                'order': order,
+                'transID': transID,  # Pass payment ID to template context
+            }
+    return render(request, 'orders/cod_order_complete.html', context)
+    
