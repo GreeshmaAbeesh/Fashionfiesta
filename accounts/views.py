@@ -1,7 +1,7 @@
 
 from django.shortcuts import render,redirect,get_object_or_404
-from .forms import Registrationform,Userform,UserProfileForm
-from .models import Account,UserProfile
+from .forms import Registrationform,Userform,UserProfileForm,ReturnRequestForm
+from .models import Account,UserProfile,ReturnRequest
 from django.contrib import messages,auth
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import authenticate
@@ -21,7 +21,9 @@ from django.contrib.auth.hashers import make_password
 from datetime import datetime,timedelta
 from orders.models import Order,OrderProduct,Payment
 from cart.views import _cart_id
-from cart.models import Cart,CartItem
+from cart.models import Cart,CartItem,PopularProduct
+from django.db.models import F
+
 
 # Create your views here.
 
@@ -299,7 +301,7 @@ def resetpassword(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id,is_ordered=True)
+    orders = Order.objects.order_by('-created_at').filter(user_id=request.user.id,is_ordered=True, status__in=['Completed','Cash_on_delivery'])
     orders_count = orders.count()
 
     
@@ -312,10 +314,11 @@ def dashboard(request):
 
 @login_required(login_url = 'login')    
 def my_orders(request):
-    orders =  Order.objects.filter(user=request.user,is_ordered=True).order_by('-created_at')
+    orders =  Order.objects.filter(user=request.user,is_ordered=True, status__in=['Completed','Cash_on_delivery']).order_by('-created_at')
+   
     context = {
-        'orders' : orders
-
+        'orders' : orders,
+        
     }
 
     return render(request,'accounts/my_orders.html',context)
@@ -393,3 +396,64 @@ def order_detail(request,order_id):
     print('order:',order_detail)
     return render(request,'accounts/order_detail.html',context)
 
+
+
+def cancel_order(request,order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    
+    # Implement your cancellation logic here
+    # For example, you can update the order status to "Cancelled"
+    order.status = 'Cancelled'
+    order.save()
+
+    # Decrease the dashboard count for canceled ordered items
+    user_profile = UserProfile.objects.get(user=request.user)
+    user_profile.orders_count = F('orders_count') - 1
+    #user_profile.ordered_items_count = F('ordered_items_count') - ordered_items_count
+    user_profile.save()
+
+
+        
+    return redirect('my_orders') 
+
+'''
+    try:
+        cart = Cart.objects.get(cart_id=_cart_id(request))
+    except Cart.DoesNotExist:
+        # Redirect the user back to the store if the cart is empty or doesn't exist
+        return redirect('store')
+    cart_items = CartItem.objects.filter(cart=cart)
+    
+    for item in cart_items:
+        # Increase the quantity of the sold products
+        product = PopularProduct.objects.get(id=item.product_id)
+        product.stock += item.quantity
+        product.save()
+    # Redirect the user back to the order history page or any other appropriate page
+'''
+    
+def return_request(request,order_id):
+    order = get_object_or_404(Order, id=order_id)
+    print('order details:',order)
+    if request.method == 'POST':
+        form = ReturnRequestForm(request.POST)
+        if form.is_valid():
+            return_reason = form.cleaned_data['return_reason']
+            # Create a return request object
+            ReturnRequest.objects.create(return_reason=return_reason)
+            # Update the order status to "Return Requested"
+            order.status = 'Returned'
+            order.save()
+            #messages.success(request, 'Return request submitted successfully.')
+            return redirect('my_orders')
+    else:
+        form = ReturnRequestForm()
+    
+    context = {
+        'form': form,
+       
+       
+    }
+    return render(request,'accounts/return_request.html',context)
+   

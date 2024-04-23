@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return Request</title>
+</head>
+<!--<body>
+    <h1>Return Request Form</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label for="id_return_reason">Reason for return:</label><br>
+            {{ form.return_reason }}
+        </div>
+        //Add more form fields here if needed 
+        <button type="submit">Submit Return Request</button>
+    </form>
+</body> -->
+<body>
+
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-6 offset-md-3">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Return Request Form</h5>
+            <form method="post" >
+              {% csrf_token %}
+              <div class="form-group">
+                <label for="returnReason">Return Reason:</label>
+                <textarea class="form-control" id="returnReason" name="return_reason" rows="3"{{ form.return_reason }}></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  </body>
+</html>
+
+{% endblock %}

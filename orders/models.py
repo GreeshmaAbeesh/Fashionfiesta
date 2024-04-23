@@ -1,6 +1,8 @@
 from django.db import models
 from accounts.models import Account
 from storeitem.models import PopularProduct,Variation
+from django.conf import settings
+from django.core.validators import MinValueValidator
 
 # Create your models here.
 
@@ -22,6 +24,7 @@ class Order(models.Model):
         ('Accepted','Accepted'),
         ('Completed','Completed'),
         ('Cancelled','Cancelled'),
+        ('Returned','Returned'),
 
     )
 
@@ -40,6 +43,7 @@ class Order(models.Model):
     order_note = models.CharField(max_length=100, blank=True)
     order_total = models.FloatField()
     tax = models.FloatField()
+    
     status = models.CharField(max_length=50,choices=STATUS, default='New')
     ip = models.CharField(max_length=20, blank=True)
     is_ordered = models.BooleanField(default=False)
@@ -74,9 +78,63 @@ class OrderProduct(models.Model):
 
     def __str__(self):
         return self.product.product_name
+    
+class BillingAddress(models.Model):
+    user = models.ForeignKey(Account, on_delete=models.SET_NULL,null=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    address_line_1= models.CharField(max_length=255)
+    address_line_2= models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def full_address(self):
+        return f"{self.address_line_1} {self.address_line_2}"
+
+    def __str__(self):
+        return self.full_name
+
+
+
+class Addresses(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address_line_1 = models.CharField(max_length=255)
+    address_line_2 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.first_name},{self.last_name},{self.address_line_1}, {self.city}, {self.country}"
 
 
 
 
-
-
+class Coupon(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE,null=True,blank=True)
+    code = models.CharField(max_length=50,unique=True)
+    discount = models.DecimalField(max_digits=10,decimal_places=2,validators=[MinValueValidator(0)])
+    active = models.BooleanField(default=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=20)
+    address_line_1 = models.CharField(max_length=255)
+    address_line_2 = models.CharField(max_length=255, blank=True, null=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    country = models.CharField(max_length=100)
+    def __str__(self):
+        return self.code

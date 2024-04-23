@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+    <div class="container">
+    
+    <!-- ============================ COMPONENT 1 ================================= -->
+    
+    <h4 class="text-center mb-10">Review Your Order And Make Payment</h4>
+    <div class="row">
+        
+        <aside class="col-lg-8">
+            <div class="card" >
+                <h5 class="card-header">Saved Address</h5>
+                <div class="card-body">
+                  <p class="card-text mb-0">{{addresses.first_name}}</p>
+                  <p class="card-text mb-0">{{addresses.last_name}}</p>
+                  <p class="card-text mb-0">{{addresses.address_line_1}}</p>
+                  <p class="card-text mb-0">{{addresses.address_line_2}}</p>
+                  <p class="card-text mb-0">{{addresses.full_address}}</p>
+                  <p class="card-text mb-0">{{addresses.city}},{{order.state}}</p>
+                  <p class="card-text mb-0">{{addresses.country}}</p>
+                  <p class="card-text mb-0">{{addresses.email}}</p>
+                  <p class="card-text mb-0">{{addresses.phone}}</p>
+                  
+                </div>
+            </div>
+           
+            
+              
+        </aside> <!-- col.// -->
+        
+               
+            </div> <!-- card-body.// -->
+            </div> <!-- card.// -->
+    
+    </aside> <!-- col.// -->
+    
+    
+    </div> <!-- row.// -->
+   
+    <!-- ============================ COMPONENT 1 END .// ================================= -->
+    
+    </div> <!-- container .//  -->
+</section>
+    <!-- ========================= SECTION CONTENT END// ========================= -->
+
+
+{% endblock %}
