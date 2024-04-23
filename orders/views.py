@@ -451,11 +451,18 @@ def save_address(request):
     
     return render(request,'orders/address.html',context)
 
+def delete_address(request, address_id):
+    address = get_object_or_404(Addresses, pk=address_id, user=request.user)
+    if request.method == 'POST':
+        address.delete()
+    return redirect('save_address')  # Redirect to address list page after deletion
 
 #@login_required
 def address_list(request):
     addresses = Addresses.objects.filter(user=request.user)
     return render(request, 'orders/address_list.html', {'addresses': addresses})
+
+
 
 '''
 def save_address(request):

@@ -13,6 +13,7 @@
         {% endif %}
         
     </div> <!-- container //  -->
+    
     </section>
     <!-- ========================= SECTION INTRO END// ========================= -->
 
@@ -44,7 +45,7 @@
                 </div> <!-- card-body.// -->
             </div>
         </article> <!-- filter-group  .// -->
-        <article class="filter-group">
+       <!-- <article class="filter-group">
             <header class="card-header">
                 <a href="#" data-toggle="collapse" data-target="#collapse_4" aria-expanded="true" class="">
                     <i class="icon-control fa fa-chevron-down"></i>
@@ -72,35 +73,108 @@
                     <input type="checkbox">
                     <span class="btn btn-light"> XXL </span>
                   </label>
-            </div><!-- card-body.// -->
+            </div><!- card-body.// ->
             </div>
-        </article> <!-- filter-group .// -->
+        </article> <!- filter-group .// ->-->
+        
+        <!--<article class="filter-group">
+            <header class="card-header">
+                <form action="{% url 'filter_and_sort_products' %}" method="GET">
+                    {% csrf_token %}
+                    <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
+                        <i class="icon-control fa fa-chevron-down"></i>
+                        <h6 class="title">Sort </h6>
+                    </a>
+                    <div class="filter-content collapse show" id="collapse_3" style="">
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Sort</label>
+                                    <select class="mr-2 form-control" name="min_price">
+                                        <option value="0">Price</option>
+                                        <option value="500">₹500-₹1000</option>
+                                        <option value="1000">₹1000-₹1500</option>
+                                        <option value="1500">₹1500-₹2000</option>
+                                        <option value="2000">₹2000-₹5000</option>
+                                        <option value="5000">₹5000-₹10000</option>
+                                        <option value="10000">₹10000+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-block btn-primary">Apply</button>
+                        </div><!- card-body.// ->
+                    </div>
+                </form>
+            </header>
+        </article> <!- filter-group .// ->-->
         
         <article class="filter-group">
             <header class="card-header">
-                <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
+                <form action="{% url 'filter_and_sort_products' %}" method="GET" id="sort-form">
+                    {% csrf_token %}
+                    <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
+                        <i class="icon-control fa fa-chevron-down"></i>
+                        <h6 class="title">Sort </h6>
+                    </a>
+                    <div class="filter-content collapse show" id="collapse_3" style="">
+                        <div class="card-body">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Sort</label>
+                                    <select class="mr-2 form-control" name="sort_by_price">
+                                        <option value="price">Price</option>
+                                        <option value="newly_added">Newly Added</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-block btn-primary">Apply</button>
+                        </div><!-- card-body.// -->
+                    </div>
+                </form>
+            </header>
+        </article> <!-- filter-group .// -->
+        
+        <script>
+            // Toggle display of sorting options based on selection
+            document.querySelector('select[name="sort_by_price"]').addEventListener('change', function () {
+                var sortOption = this.value;
+                if (sortOption === 'price') {
+                    // Hide newly added product sort option
+                    document.getElementById('collapse_3').style.display = 'block';
+                } else if (sortOption === '-created_at') {
+                    // Show newly added product sort option
+                    document.getElementById('collapse_3').style.display = 'none';
+                }
+            });
+        </script>
+        
+
+        <!--<article class="filter-group">
+            <header class="card-header">
+                <a href="{% url 'filter_and_sort_products' %}" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
                     <i class="icon-control fa fa-chevron-down"></i>
-                    <h6 class="title">Price range </h6>
+                    <h6 class="title">Filter </h6>
                 </a>
             </header>
+
             <div class="filter-content collapse show" id="collapse_3" style="">
                 <div class="card-body">
                     
                     <div class="form-row">
                     <div class="form-group col-md-6">
-                      <label>Min</label>
-                      <!-- <input class="form-control" placeholder="$0" type="number"> -->
+                      <label>Filter</label>
+                      <!- <input class="form-control" placeholder="$0" type="number"> ->
                           <select class="mr-2 form-control">
-                            <option value="0">₹0</option>
-                            <option value="500">₹500</option>
-                            <option value="1000">₹1000</option>
-                            <option value="1500">₹1500</option>
-                            <option value="2000">₹2000</option>
-                            <option value="5000">₹5000</option>
-                            <option value="10000">₹10000</option>
+                            <option value="0">₹0-₹500</option>
+                            <option value="500">₹500-₹1000</option>
+                            <option value="1000">₹1000-₹1500</option>
+                            <option value="1500">₹1500-₹2000</option>
+                            <option value="2000">₹2000-₹5000</option>
+                            <option value="5000">₹5000-₹10000</option>
+                            <option value="10000">₹10000+</option>
                         </select>
-                    </div>
-                    <div class="form-group text-right col-md-6">
+                    </div>-->
+                    <!--<div class="form-group text-right col-md-6">
                       <label>Max</label>
                           <select class="mr-2 form-control">
                             <option value="500">₹500</option>
@@ -112,11 +186,11 @@
                             <option value="20000">₹20000+</option>
                         </select>
                     </div>
-                    </div> <!-- form-row.// -->
-                    <button class="btn btn-block btn-primary">Apply</button>
-                </div><!-- card-body.// -->
-            </div>
-        </article> <!-- filter-group .// -->
+                    </div> --><!-- form-row.// -->
+                    <!--<button class="btn btn-block btn-primary">Apply</button>
+                </div>--><!-- card-body.// -->
+            <!--</div>
+        </article>--> <!-- filter-group .// -->
         
     </div> <!-- card.// -->
     

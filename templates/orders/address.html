@@ -73,8 +73,10 @@
         <aside class="col-lg-6">
             <div class="card">
                 <div class="card-body">
+
+
             <!-- Section for displaying saved billing addresses -->
-                    <h4 class="card-title mb-4">Saved Billing Addresses</h4>
+                   <!-- <h4 class="card-title mb-4">Saved Billing Addresses</h4>
                     {% if addresses %}
                         <ul>
                             {% for address in addresses %}
@@ -85,7 +87,33 @@
                         </ul>
                     {% else %}
                         <p>No saved addresses found.</p>
+                    {% endif %}-->
+
+                <!-- Section for displaying saved billing addresses -->
+                <div class="mt-4">
+                    <h5>Saved Billing Addresses:</h5>
+                    {% if addresses %}
+                    <div class="row">
+                        {% for address in addresses %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Address</h5>
+                                    <p class="card-text"> {{address.first_name}}, {{address.last_name }}, {{ address.address_line_1 }}, {{ address.address_line_2 }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                    <button type="button" class="btn btn-primary ml-2 place-order" data-id="{{ address.id }}" data-place-order-url="{% url 'place_order' %}">Place order</button>
+                                    <div class="ml-2"></div> <!-- Add margin here -->
+                                    <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No saved billing addresses found.</p>
                     {% endif %}
+                </div>
+              
+                
                 </div> <!-- card-body.// -->
             </div> <!-- card.// -->
         </aside> <!-- col.// -->

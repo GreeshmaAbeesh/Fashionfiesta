@@ -77,19 +77,68 @@
         
 
             <!-- Section for displaying saved billing addresses -->
-            <div class="mt-4">
+            <!--<div class="mt-4">
                 <h5>Saved Billing Addresses:</h5>
                 {% if billing_addresses %}
                     <ul>
                         {% for address in billing_addresses %}
-                            <li>{{ address.full_name }} - {{ address.full_address }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</li>
-                            <!-- Add buttons or links for editing or deleting each address -->
+                            <!-<li>{{ address.full_name }} - {{ address.full_address }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</li>->
+                            <!- Add buttons or links for editing or deleting each address ->
+                            <div class="card" style="width: 18rem;">
+                                <div class="card-body">
+                                  <h5 class="card-title">address</h5>
+                                  <p class="card-text">{{ address.full_name }} - {{ address.full_address }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                  <a href="#" class="btn btn-primary">Go somewhere</a>
+                                </div>
+                              </div>
+                              
+                              
                         {% endfor %}
                     </ul>
                 {% else %}
                     <p>No saved billing addresses found.</p>
                 {% endif %}
+            </div>-->
+
+
+           <!-- Section for displaying saved billing addresses -->
+            <div class="mt-4">
+                <h5>Saved Billing Addresses:</h5>
+                {% if addresses %}
+                <div class="row">
+                    {% for address in addresses %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ address.full_name }}</h5>
+                                <p class="card-text">{{ address.full_address }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                <button type="button" class="btn btn-primary edit-address" data-id="{{ address.id }}">Edit</button>
+                                <button type="button" class="btn btn-danger ml-2 delete-address" data-id="{{ address.id }}">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No saved billing addresses found.</p>
+                {% endif %}
             </div>
+
+            <script>
+                // Function to handle edit address action
+                $('.edit-address').click(function() {
+                    var addressId = $(this).data('id');
+                    // Use addressId to perform edit action using AJAX
+                    // Example: You can send an AJAX request to a Django view to edit the address
+                });
+
+                // Function to handle delete address action
+                $('.delete-address').click(function() {
+                    var addressId = $(this).data('id');
+                    // Use addressId to perform delete action using AJAX
+                    // Example: You can send an AJAX request to a Django view to delete the address
+                });
+            </script>
 
 
             </div> <!-- card-body.// -->

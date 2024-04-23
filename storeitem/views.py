@@ -134,3 +134,48 @@ def submit_review(request,product_id):
                 return redirect(url)
     return HttpResponse("Error: Invalid request") 
     
+'''
+def filter_and_sort_products(request):
+    if request.method == 'GET':
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
+        
+        # Filter products based on price range
+        if min_price is not None and max_price is not None:
+            products = PopularProduct.objects.filter(price__gte=min_price, price__lte=max_price)
+        else:
+            products = PopularProduct.objects.all()
+        
+        # Sort products by price
+        sorted_products = products.order_by('price','-created_at')  # Change 'price' to '-price' for descending order
+        
+        context = {
+            'products': sorted_products
+        }
+        return render(request, 'store/store.html', context)
+'''
+
+def filter_and_sort_products(request):
+    if request.method == 'GET':
+        sort_by = request.GET.get('sort_by_price')
+        if sort_by == 'price':
+            min_price = request.GET.get('min_price')
+            max_price = request.GET.get('max_price')
+            # Filter products based on price range
+            if min_price is not None and max_price is not None:
+                products = PopularProduct.objects.filter(price__gte=min_price, price__lte=max_price)
+            else:
+                products = PopularProduct.objects.all()
+            # Sort products by price
+            sorted_products = products.order_by('price')  # Change 'price' to '-price' for descending order
+        elif sort_by == 'newly_added':
+            # Sort products by newly added
+            sorted_products = PopularProduct.objects.all().order_by('-created_date')
+        else:
+            # Default sorting
+            sorted_products = PopularProduct.objects.all()
+
+        context = {
+            'products': sorted_products
+        }
+        return render(request, 'store/store.html', context)

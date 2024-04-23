@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db.models import F
 # Create your views here.
 
 
@@ -133,7 +134,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         tax = 0
         grand_total = 0
         cart = Cart.objects.get(cart_id=_cart_id(request))
-        cart_items = CartItem.objects.filter(cart=cart,is_active=True)
+        cart_items = CartItem.objects.filter(cart=cart,is_active=True).order_by(F('product__price').asc()) 
         for cart_item in cart_items:
             total += (cart_item.product.price * cart_item.quantity)
             quantity += cart_item.quantity
@@ -177,3 +178,5 @@ def checkout(request, total=0, quantity=0, cart_items=None):
         'grand_total' : grand_total,
     }
     return render(request,'store/checkout.html',context)
+
+
