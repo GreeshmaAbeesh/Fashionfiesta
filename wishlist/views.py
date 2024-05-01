@@ -1,6 +1,7 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from storeitem.models import PopularProduct,Variation
-from .models import Cart,CartItem
+from storeitem.models import PopularProduct,Variation,ProductGallery
+from .models import Wishlist,WishlistItem
+from cart.models import Cart
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
@@ -9,15 +10,15 @@ from django.db.models import F
 # Create your views here.
 
 
-def _cart_id(request):                  # cart made as private
-    cart = request.session.session_key  # inside cookies there is session and it gives session id.
-    if not cart:                        # if there is no asession, it will create new session
-        cart = request.session.create()
-    return cart                         # here return the cart id
+def _wishlist_id(request):                  # cart made as private
+    wishlist = request.session.session_key  # inside cookies there is session and it gives session id.
+    if not wishlist:                        # if there is no asession, it will create new session
+        wishlist = request.session.create()
+    return wishlist                        # here return the cart id
 
 # we get the product here
 
-def add_cart(request,product_id):
+def add_wishlist(request,product_id):
     product=PopularProduct.objects.get(id=product_id)  # to get the product
     # we get product variation here
     product_variation = []          # inside this list we have color and size
@@ -31,34 +32,34 @@ def add_cart(request,product_id):
 
             try:
                 variation = Variation.objects.get(product=product, variation_category__iexact=key,variation_value__iexact=value)
-                print('inside add cart',variation)
+                print('inside add wishlist',variation)
                 product_variation.append(variation)  # here insert values to a cart item
             except:
                 pass
         
    
-    #we get cart
+    #we get wishlist
     try:
-        cart = Cart.objects.get(cart_id=_cart_id(request)) #here  it will match cart id with session id. get the cart using the cart_id. [ we need to cart id from session.ie inside cookies there is session and it gives session id.. that session is taken as cart id]
-    except Cart.DoesNotExist:
-        cart = Cart.objects.create(
-            cart_id =_cart_id(request)
+        wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request)) #here  it will match cart id with session id. get the cart using the cart_id. [ we need to cart id from session.ie inside cookies there is session and it gives session id.. that session is taken as cart id]
+    except Wishlist.DoesNotExist:
+        wishlist = Wishlist.objects.create(
+            wishlist_id =_wishlist_id(request)
         )
-    cart.save()
+    wishlist.save()
 
-    #we get cartitem
-    print("above is cartitem exist")
-    print('cart,user,product',cart,request.user,product)
-    is_cart_item_exists = CartItem.objects.filter(product=product,cart=cart,user=request.user).exists()
-    if is_cart_item_exists:
-        print("inside is cartitem exist")
-        cart_item = CartItem.objects.filter(product=product,cart=cart,user=request.user)      # return cart item objects
+    #we get wishlistitem
+    print("above is wishlistitem exist")
+    print('wishlist,user,product',wishlist,request.user,product)
+    is_wishlist_item_exists = WishlistItem.objects.filter(product=product,wishlist=wishlist,user=request.user).exists()
+    if is_wishlist_item_exists:
+        print("inside is wishlistitem exist")
+        wishlist_item = WishlistItem.objects.filter(product=product,wishlist=wishlist,user=request.user)      # return cart item objects
         #existing variations from database
         #current variations in product_variation list
         # item_id from database
         ex_var_list = []
         id = []
-        for item in cart_item:    #check weather the current variation inside exsting variation then increase quantity of item
+        for item in wishlist_item:    #check weather the current variation inside exsting variation then increase quantity of item
             existing_variation = item.variations.all()
             ex_var_list.append(list(existing_variation))
             id.append(item.id)
@@ -69,30 +70,33 @@ def add_cart(request,product_id):
             # increase the cart item quantity
             index =  ex_var_list.index(product_variation)
             item_id = id[index]
-            item = CartItem.objects.get(product=product, id=item_id)
+            item = WishlistItem.objects.get(product=product, id=item_id)
             item.quantity += 1
             item.save()
         
         else:
             #create new cart item
-            item = CartItem.objects.create(product=product, quantity=1, cart=cart,user=request.user)
+            item = WishlistItem.objects.create(product=product, quantity=1, wishlist=wishlist,user=request.user)
             if len(product_variation)>0:   #if product variation list not empty
                 item.variations.clear()
                 item.variations.add(*product_variation) 
             item.save()
 
     else:
-        cart_item = CartItem.objects.create(
+        wishlist_item = WishlistItem.objects.create(
             product = product,
             quantity = 1,      # 1 because it is new cartitem
-            cart  = cart,
+            wishlist  = wishlist,
             user = request.user,
         )
         if len(product_variation)>0:   #if product variation in empty list
-            cart_item.variations.clear()
-            cart_item.variations.add(*product_variation)
-        cart_item.save()
-    return redirect('cart')
+            wishlist_item.variations.clear()
+            wishlist_item.variations.add(*product_variation)
+        wishlist_item.save()
+
+    
+
+    return redirect('wishlist')
 
 '''
 def view_cart(request):
@@ -102,43 +106,42 @@ def view_cart(request):
     return render(request, 'store/cart.html', {'cart_items': cart_items})
 '''
 
-def remove_cart(request, product_id,cart_item_id):                        # this function is used to reduce cart item while clicking minus button
-    cart = Cart.objects.get(cart_id=_cart_id(request))
+def remove_wishlist(request, product_id,wishlist_item_id):                        # this function is used to reduce cart item while clicking minus button
+    wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
     product = get_object_or_404(PopularProduct,id=product_id)
     try:
-        cart_item = CartItem.objects.get(product=product , cart=cart, id=cart_item_id)
-        if cart_item.quantity > 1:
-            cart_item.quantity -= 1
-            cart_item.save()
+        wishlist_item = WishlistItem.objects.get(product=product , wishlist=wishlist, id=wishlist_item_id)
+        if wishlist_item.quantity > 1:
+            wishlist_item.quantity -= 1
+            wishlist_item.save()
         else:
-            cart_item.delete()
+            wishlist_item.delete()
     except:
         pass
-    return redirect('cart')
+    return redirect('wishlist')
 
 
 
-def remove_cart_item(request, product_id,cart_item_id):
-    cart = Cart.objects.get(cart_id=_cart_id(request))
+def remove_wishlist_item(request, product_id,wishlist_item_id):
+    wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
     product = get_object_or_404(PopularProduct,id=product_id)        
-    cart_item = CartItem.objects.get(product=product , cart=cart,id=cart_item_id)
-    cart_item.delete()
-    return redirect('cart')
+    wishlist_item = WishlistItem.objects.get(product=product , wishlist=wishlist,id=wishlist_item_id)
+    wishlist_item.delete()
+    return redirect('wishlist')
 
 
 
         
     
-def cart(request, total=0, quantity=0, cart_items=None):           # to modify cart function and add items to cart
+def wishlist(request, total=0, quantity=0, wishlist_items=None):           # to modify cart function and add items to cart
     try:
         tax = 0
         grand_total = 0
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-        cart_items = CartItem.objects.filter(cart=cart,is_active=True).order_by(F('product__price').asc()) 
-        
-        for cart_item in cart_items:
-            total += (cart_item.product.price * cart_item.quantity)
-            quantity += cart_item.quantity
+        wishlist = Wishlist.objects.get(wishlist_id=_wishlist_id(request))
+        wishlist_items = WishlistItem.objects.filter(wishlist=wishlist,is_active=True).order_by(F('product__price').asc()) 
+        for wishlist_item in wishlist_items:
+            total += (wishlist_item.product.price * wishlist_item.quantity)
+            quantity += wishlist_item.quantity
         tax = (2 * total)/100
         grand_total = total + tax
     except ObjectDoesNotExist:
@@ -147,15 +150,15 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
     context = {
         'total' : total,
         'quantity' : quantity,
-        'cart_items' : cart_items,
+        'wishlist_items' : wishlist_items,
         'tax' : tax ,
         'grand_total' : grand_total,
     }
-    return render(request,'store/cart.html',context)   
+    return render(request,'store/wishlist.html',context)   
 
 
 
-
+'''
 @login_required(login_url='login')
 def checkout(request, total=0, quantity=0, cart_items=None):
     try:
@@ -179,5 +182,4 @@ def checkout(request, total=0, quantity=0, cart_items=None):
         'grand_total' : grand_total,
     }
     return render(request,'store/checkout.html',context)
-
-
+'''

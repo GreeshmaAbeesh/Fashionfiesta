@@ -68,7 +68,7 @@
                 </div>
           
                 <!-- Submit button for saving the new address -->
-                <a href ="{% url 'checkout' %}" type="submit" class="btn btn-primary btn-block mt-3">Save Address</a>
+                <!--<a href ="{% url 'checkout' %}" type="submit" class="btn btn-primary btn-block mt-3">Save Address</a>-->
             
         </div>
     </div> <!-- card.// -->
@@ -146,7 +146,7 @@
 
 
             <!-- Section for displaying saved billing addresses -->
-            <div class="mt-4">
+        <!--<div class="mt-4">
                 <h5>Saved Billing Addresses:</h5>
                 {% if addresses %}
                     <ul>
@@ -154,13 +154,13 @@
                             <li>
                                 {{address.first_name}},{{address.last_name }},{{ address.address_line_1 }},{{ address.address_line_2 }},{{ address.city }}, {{ address.state }}, {{ address.country }}
                                 
-                            <!-- Add buttons or links for editing or deleting each address -->
+                            <!- Add buttons or links for editing or deleting each address ->
                         {% endfor %}
                     </ul>
                 {% else %}
                     <p>No saved addresses found.</p>
                 {% endif %}
-            </div>
+            </div>-->
 
 
             </div> <!-- card-body.// -->

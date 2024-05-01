@@ -1,24 +1,25 @@
 from django.db import models
 from storeitem .models import PopularProduct,Variation
 from accounts .models import Account
-from coupons .models import Coupon
+
 
 # Create your models here.
 
-class Cart(models.Model):
-    cart_id    = models.CharField(max_length=250,blank=True)
+class Wishlist(models.Model):
+    wishlist_id    = models.CharField(max_length=250,blank=True)
     date_added = models.DateField(auto_now_add=True)
-    coupons = models.ManyToManyField(Coupon, blank=True)
+   
 
     def __str__(self):
-        return self.cart_id
+        return self.wishlist_id
     
 
-class CartItem(models.Model):
+class WishlistItem(models.Model):
+   
     user = models.ForeignKey(Account, on_delete=models.CASCADE,null=True)
     product = models.ForeignKey(PopularProduct, on_delete=models.CASCADE)
     variations = models.ManyToManyField(Variation, blank=True)
-    cart    = models.ForeignKey(Cart, on_delete=models.CASCADE,null=True)
+    wishlist    = models.ForeignKey(Wishlist, on_delete=models.CASCADE,null=True)
     quantity = models.IntegerField()
     order_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_active = models.BooleanField(default=True)
@@ -28,6 +29,3 @@ class CartItem(models.Model):
 
     def __unicode__(self):
         return self.product
-    
-
-

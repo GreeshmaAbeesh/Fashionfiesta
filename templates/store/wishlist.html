@@ -1,0 +1,119 @@
+<!-- store/wishlist.html -->
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<section class="section-content padding-y bg">
+    <div class="container">
+    
+    <!-- ============================ COMPONENT 1 ================================= -->
+    
+    {% if not wishlist_items %}
+
+        <h2 class="text-center">Your Wishlist Is Empty </h2>
+        <br>
+        <div class="text-center">
+            <a href="{% url 'store' %}" class="btn btn-primary">Continue Shopping</a>
+        </div>
+
+    {% else %}
+
+    <div class="row">
+        <aside class="col-lg-9">
+    <div class="card">
+    <table class="table table-borderless table-shopping-wishlist">
+    <thead class="text-muted">
+    <tr class="small text-uppercase">
+      <th scope="col">Product</th>
+      <th scope="col" width="120">Price</th>
+      
+      <th scope="col" class="text-right" width="200"> </th>
+      <th scope="col" class="text-right" width="200"> </th>
+    </tr>
+    </thead>
+    <tbody>
+
+    {% for wishlist_item in wishlist_items %}
+    <tr>
+        <td>
+            <figure class="itemside align-items-center">
+                <div class="aside"><img src="{{ wishlist_item.product.images.url }}" class="img-sm"></div>   <!--get image in cart,this image taken from PopularProduct. product is the instance of popularproduct set in cart views-->
+                <figcaption class="info">
+                    <a href="{{ wishlist_item.product.get_url }}" class="title text-dark">{{ wishlist_item.product.product_name }}</a>   <!--get_url from storeitem- model-->
+                    <p class="text-muted small">
+                        {% if wishlist_item.variations.all %}
+                            {% for item in wishlist_item.variations.all %}
+                                {{item.variation_category | capfirst}} : {{item.variation_value | capfirst}}<br>    <!--this is for printing selected color and size in cart-->
+                            {% endfor %}
+                        {% endif %}
+                    </p>
+                </figcaption>
+            </figure>
+        </td>
+        
+        <td> 
+            <div class="price-wrap"> 
+                <var class="price">{{ wishlist_item.sub_total }}</var> 
+                <small class="text-muted">₹ {{ wishlist_item.product.price }} </small>  <!--for printing single price-->
+            </div> <!-- price-wrap .// -->
+        </td>
+        <td class="text-right"> 
+        <a href="{% url 'remove_wishlist_item' wishlist_item.product.id  wishlist_item.id %}" onclick="return confirm('Are you sure you want to deletethis item')" class="btn btn-danger"> Remove</a>
+         <!-- Add to Cart button -->
+        
+        </td>
+        <td class="text-right">
+            <form action="{% url 'add_cart' wishlist_item.product.id %}" method="POST" style="display: inline;">
+                {% csrf_token %}
+                {% for item in wishlist_item.variations.all %}
+                <input type="hidden" name="{{item.variation_category | lower}}" value="{{item.variation_value | capfirst}}">
+                {% endfor %}
+                <button type="submit" class="btn btn-success">Add to Cart</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+   
+    </tbody>
+    </table>
+    </div> <!-- card.// -->
+    
+        </aside> <!-- col.// -->
+        <aside class="col-lg-3">
+    
+            <div class="card">
+            <div class="card-body">
+                <dl class="dlist-align">
+                  <dt>Total price:</dt>
+                  <dd class="text-right">₹ {{total}}</dd>
+                </dl>
+                <dl class="dlist-align">
+                  <dt>Tax:</dt>
+                  <dd class="text-right">₹ {{tax}} </dd>
+                </dl>
+                <dl class="dlist-align">
+                  <dt>Grand_Total:</dt>
+                  <dd class="text-right text-dark b"><strong>₹ {{grand_total}}</strong></dd>
+                </dl>
+                <hr>
+                <p class="text-center mb-3">
+                    <img src="{% static './images/misc/payments.png' %}" height="26">
+                </p>
+                
+                <!--<a href="{% url 'cart' %}" class="btn btn-primary btn-block">Add to Cart </a>-->
+                <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+            </div> <!-- card-body.// -->
+            </div> <!-- card.// -->
+    
+    </aside> <!-- col.// -->
+    
+    
+    </div> <!-- row.// -->
+    {% endif %}
+    <!-- ============================ COMPONENT 1 END .// ================================= -->
+    
+    </div> <!-- container .//  -->
+    </section>
+    <!-- ========================= SECTION CONTENT END// ========================= -->
+{% endblock %}

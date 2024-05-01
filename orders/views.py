@@ -598,22 +598,22 @@ def coupon_activate(request,total=0, quantity=0):
     print('request.method=',request.method)
 
     if request.method == 'POST':
-            form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
+        form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
         #print('inside post',form)
-        #if form.is_valid():
+        if form.is_valid():
             # store all the billing information inside order table
             data = Order()
             data.user = current_user
-            #data.first_name = form.cleaned_data['first_name']  # recieve files values from request.POST
-            #data.last_name = form.cleaned_data['last_name']
-            # data.phone = form.cleaned_data['phone']
-            #data.email = form.cleaned_data['email']
-            # data.address_line_1 = form.cleaned_data['address_line_1']
-            # data.address_line_2 = form.cleaned_data['address_line_2']
-            # data.country = form.cleaned_data['country']
-            # data.state = form.cleaned_data['state']
-            # data.city = form.cleaned_data['city']
-            # data.order_note = form.cleaned_data['order_note']
+            data.first_name = form.cleaned_data['first_name']  # recieve files values from request.POST
+            data.last_name = form.cleaned_data['last_name']
+            data.phone = form.cleaned_data['phone']
+            data.email = form.cleaned_data['email']
+            data.address_line_1 = form.cleaned_data['address_line_1']
+            data.address_line_2 = form.cleaned_data['address_line_2']
+            data.country = form.cleaned_data['country']
+            data.state = form.cleaned_data['state']
+            data.city = form.cleaned_data['city']
+            data.order_note = form.cleaned_data['order_note']
             #data.first_name = request.POST.get('first_name')  # Directly access POST data
             #data.last_name = request.POST.get('last_name')
             # data.phone = request.POST.get('phone')
@@ -656,9 +656,9 @@ def coupon_activate(request,total=0, quantity=0):
             }
             print('order number in place_order:',order_number)
             return render(request,'orders/payments.html',context)
-        #else:
+        else:
             # If form is not valid, render the checkout page again with form errors
-            #return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
+            return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
 
     else:
         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
