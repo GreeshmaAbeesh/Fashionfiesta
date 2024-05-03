@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser,BaseUserManager
 
 
 
+
+
 # Create your models here.
 
 class MyAccountManager(BaseUserManager):
@@ -88,15 +90,3 @@ class UserProfile(models.Model):
     
     def full_address(self):
         return f"{self.address_line_1}{self.address_line_2}"
-
-
-class ReturnRequest(models.Model):
-    RETURN_REASON_CHOICES = [
-        ('Damage', 'Item is damaged'),
-        ('Wrong Size', 'Wrong size ordered'),
-        ('Wrong Item', 'Wrong item received'),
-        ('Other', 'Other reason'),
-    ]
-
-   
-    return_reason = models.CharField(max_length=100, choices=RETURN_REASON_CHOICES)

@@ -14,7 +14,8 @@
     <div class="card">
         <div class="card-body">
             <h4 class="card-title mb-4">Billing Address </h4>
-            <form action="{% url 'place_order' %}" method="POST">     <!--place_order defined in view of order-->
+            <!-- Address form -->
+            <form id="billingAddressForm" method="POST">     <!--place_order defined in view of order-->
                 {% csrf_token %}
                 <div class="form-row">
                     <div class="col form-group">
@@ -123,9 +124,37 @@
                     </tbody>
                 </table>
                 
-                <button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>
+                <!--<button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>-->
+                <div class="form-row">
+                    <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
+                    <button id="placeOrderBtn" type="button" class="btn btn-primary btn-block mt-3">Place Order</button>
+                </div>
+                </form>
                 <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+               
             </form>
+
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const form = document.getElementById("billingAddressForm");
+                    const saveAddressBtn = document.getElementById("saveAddressBtn");
+                    const placeOrderBtn = document.getElementById("placeOrderBtn");
+            
+                    saveAddressBtn.addEventListener("click", function() {
+                        // Set action URL for saving address
+                        form.action = "{% url 'save_address' %}";
+                        form.submit();
+                    });
+            
+                    placeOrderBtn.addEventListener("click", function() {
+                        // Set action URL for placing order
+                        form.action = "{% url 'place_order' %}";
+                        form.submit();
+                    });
+
+                 });
+            </script>
 
             <!-- Space for entering coupon code -->
             <div class="mt-4">
@@ -143,7 +172,59 @@
                     </div>
                 </form>
             </div>
+            
+            <div class="mt-4">
+                <h5>Saved Billing Addresses:</h5>
+                {% if addresses %}
+                <div class="row">
+                    {% for address in addresses %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Address</h5>
+                                <p class="card-text"> {{address.first_name}}, {{address.last_name }}, {{ address.address_line_1 }}, {{ address.address_line_2 }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                
+                                <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
 
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No saved billing addresses found.</p>
+                {% endif %}
+            </div>
+
+
+            <!-- JavaScript code to handle address deletion -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const deleteButtons = document.querySelectorAll(".delete-address");
+        deleteButtons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                const deleteUrl = button.getAttribute("data-delete-url");
+                fetch(deleteUrl, {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Remove the deleted address from the DOM
+                        button.closest(".card").parentNode.remove();
+                    } else {
+                        console.error("Failed to delete address");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    });
+</script>
 
             <!-- Section for displaying saved billing addresses -->
         <!--<div class="mt-4">

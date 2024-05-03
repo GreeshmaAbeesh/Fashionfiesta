@@ -11,6 +11,10 @@ urlpatterns = [
     path('coupon/',views.coupon,name='coupon'),
     path('coupon_activate/', views.coupon_activate, name='coupon_activate'),
     path('delete_address/<int:address_id>/', views.delete_address, name='delete_address'),
+    path('return_request/<int:order_id>/', views.return_request, name='return_request'),
+    path('wallet/', views.wallet, name='wallet'),
+    #path('save_billing_address/', views.save_billing_address, name='save_billing_address'),
+
     
 ]
    

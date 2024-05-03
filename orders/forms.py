@@ -2,6 +2,7 @@ from django import forms
 from .models import Order
 from .models import Addresses
 from .models import Coupon
+from .models import BillingAddress
 
 
 class OrderForm(forms.ModelForm):
@@ -21,3 +22,14 @@ class CouponForm(forms.ModelForm):
     class Meta:
         model = Coupon
         fields = ['first_name', 'last_name', 'email', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country','discount','code','active','order']
+
+
+
+class ReturnRequestForm(forms.Form):
+    return_reason = forms.CharField(label='Reason for return', widget=forms.Textarea)
+    # Add more fields as needed
+
+class BillingAddressForm(forms.ModelForm):
+    class Meta:
+        model = BillingAddress
+        fields = ['first_name', 'last_name', 'email', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country']

@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'customadmin',
     'orders',
     'coupons',
-    'wishlist'
+    'wishlist',
+    
     
     
     

@@ -1,7 +1,7 @@
 
 from django.shortcuts import render,redirect,get_object_or_404
-from .forms import Registrationform,Userform,UserProfileForm,ReturnRequestForm
-from .models import Account,UserProfile,ReturnRequest
+from .forms import Registrationform,Userform,UserProfileForm
+from .models import Account,UserProfile
 from django.contrib import messages,auth
 from django.views.decorators.cache import never_cache
 from django.contrib.auth import authenticate
@@ -23,6 +23,7 @@ from orders.models import Order,OrderProduct,Payment
 from cart.views import _cart_id
 from cart.models import Cart,CartItem,PopularProduct
 from django.db.models import F
+
 
 
 # Create your views here.
@@ -433,27 +434,3 @@ def cancel_order(request,order_id):
     # Redirect the user back to the order history page or any other appropriate page
 '''
     
-def return_request(request,order_id):
-    order = get_object_or_404(Order, id=order_id)
-    print('order details:',order)
-    if request.method == 'POST':
-        form = ReturnRequestForm(request.POST)
-        if form.is_valid():
-            return_reason = form.cleaned_data['return_reason']
-            # Create a return request object
-            ReturnRequest.objects.create(return_reason=return_reason)
-            # Update the order status to "Return Requested"
-            order.status = 'Returned'
-            order.save()
-            #messages.success(request, 'Return request submitted successfully.')
-            return redirect('my_orders')
-    else:
-        form = ReturnRequestForm()
-    
-    context = {
-        'form': form,
-       
-       
-    }
-    return render(request,'accounts/return_request.html',context)
-   

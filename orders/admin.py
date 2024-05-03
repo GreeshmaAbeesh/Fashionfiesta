@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment,Order,OrderProduct,Addresses
+from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest
 
 # Register your models here.
 
@@ -17,9 +17,21 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderProductInline]
 
 
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('user','balance')
+
+
+class ReturnRequestAdmin(admin.ModelAdmin):
+    list_display = ('order','return_reason')
+
+
+
 admin.site.register(Payment)
 admin.site.register(Order,OrderAdmin)
 admin.site.register(OrderProduct)
 admin.site.register(Addresses)
+admin.site.register(Wallet,WalletAdmin)
+admin.site.register(ReturnRequest)
+
 
 

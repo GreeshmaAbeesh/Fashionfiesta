@@ -49,7 +49,7 @@ class Order(models.Model):
     is_ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
 
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
@@ -138,3 +138,22 @@ class Coupon(models.Model):
     country = models.CharField(max_length=100)
     def __str__(self):
         return self.code
+    
+    
+
+class Wallet(models.Model):
+    user = models.OneToOneField(Account, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return self.first_name
+    
+
+
+class ReturnRequest(models.Model):
+    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
+    return_reason = models.CharField(max_length=100)
+
+
+

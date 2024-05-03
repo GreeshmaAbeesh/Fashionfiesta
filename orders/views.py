@@ -1,8 +1,8 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
-from .forms import OrderForm,AddressesForm,CouponForm
-from .models import Order,OrderProduct,Payment,Addresses
+from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm
+from .models import Order,OrderProduct,Payment,Addresses,Wallet
 from storeitem .models import PopularProduct
 import datetime
 import json
@@ -12,6 +12,8 @@ from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from decimal import Decimal
 from coupons.models import Coupon
+from django.core.exceptions import ObjectDoesNotExist
+from .models import ReturnRequest,BillingAddress
 
 
 
@@ -257,6 +259,8 @@ def place_order(request, total=0, quantity=0):
         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
 
 
+
+
 def order_complete(request):
     order_number  = request.GET.get('order_number')
     print('order_number in order_complete',order_number)
@@ -449,7 +453,7 @@ def save_address(request):
         'addresses' : addresses,
     }
     
-    return render(request,'orders/address.html',context)
+    return render(request,'store/checkout.html',context)
 
 def delete_address(request, address_id):
     address = get_object_or_404(Addresses, pk=address_id, user=request.user)
@@ -457,11 +461,12 @@ def delete_address(request, address_id):
         address.delete()
     return redirect('save_address')  # Redirect to address list page after deletion
 
+'''
 #@login_required
 def address_list(request):
     addresses = Addresses.objects.filter(user=request.user)
     return render(request, 'orders/address_list.html', {'addresses': addresses})
-
+'''
 
 
 '''
@@ -598,32 +603,14 @@ def coupon_activate(request,total=0, quantity=0):
     print('request.method=',request.method)
 
     if request.method == 'POST':
-        form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
-        #print('inside post',form)
-        if form.is_valid():
+            form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
+            #print('inside post',form)
+            #if form.is_valid():
+            #print('form is valid')
             # store all the billing information inside order table
             data = Order()
             data.user = current_user
-            data.first_name = form.cleaned_data['first_name']  # recieve files values from request.POST
-            data.last_name = form.cleaned_data['last_name']
-            data.phone = form.cleaned_data['phone']
-            data.email = form.cleaned_data['email']
-            data.address_line_1 = form.cleaned_data['address_line_1']
-            data.address_line_2 = form.cleaned_data['address_line_2']
-            data.country = form.cleaned_data['country']
-            data.state = form.cleaned_data['state']
-            data.city = form.cleaned_data['city']
-            data.order_note = form.cleaned_data['order_note']
-            #data.first_name = request.POST.get('first_name')  # Directly access POST data
-            #data.last_name = request.POST.get('last_name')
-            # data.phone = request.POST.get('phone')
-            #data.email = request.POST.get('email')
-            # data.address_line_1 = request.POST.get('address_line_1')
-            # data.address_line_2 = request.POST.get('address_line_2')
-            # data.country = request.POST.get('country')
-            # data.state = request.POST.get('state')
-            # data.city = request.POST.get('city')
-            # data.order_note = request.POST.get('order_note')
+
             data.order_total = grand_total
             data.tax = tax
             data.ip = request.META.get('REMOTE_ADDR')
@@ -638,27 +625,52 @@ def coupon_activate(request,total=0, quantity=0):
             print(current_date)
             order_number = current_date + str(data.id)
             data.order_number = order_number
+            print('data.order_number...',data.order_number)
+            #data.first_name = first_name
             data.save()
             print('data',data)
+
+            
             
             order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)  # true when payment is successful
-            print('order is ',order)
+            #print('order is ',order)
+
+            # Fetch the last saved address for the current user
+           
+            last_saved_address = Addresses.objects.filter(user=current_user).order_by('-id').first()
+            print('saved address is ....',last_saved_address)
+             # Assign the last saved address to the order
+            if last_saved_address:
+                order.first_name = last_saved_address.first_name
+                order.last_name = last_saved_address.last_name
+                order.phone = last_saved_address.phone
+                order.email = last_saved_address.email
+                order.address_line_1 = last_saved_address.address_line_1
+                order.address_line_2 = last_saved_address.address_line_2
+                order.country = last_saved_address.country
+                order.state = last_saved_address.state
+                order.city = last_saved_address.city
+
+            order.save()
+
+
 
             context = {
-                #'order' : order,
-                'order' : data,
+                'order' : order,
+                #'order' : data,
                 'cart_items' : cart_items,
                 'total' : total,
                 'tax' : tax,
                 'grand_total' : grand_total,
                 'coupons' : coupons,
                 'discount' : discount,
+                #'order_number' : order_number,
             }
             print('order number in place_order:',order_number)
             return render(request,'orders/payments.html',context)
-        else:
+        #else:
             # If form is not valid, render the checkout page again with form errors
-            return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
+        #    return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
 
     else:
         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
@@ -712,3 +724,65 @@ def coupon_activate(request):
 
     return render(request, 'orders/payments.html', context)
 '''
+
+def return_request(request,order_id):
+    order = get_object_or_404(Order, id=order_id)
+    print('order details:',order)
+   
+    '''
+    try:
+        wallet = get_object_or_404(Wallet, user=request.user)
+        print('wallet exist')
+    except Wallet.DoesNotExist:
+        wallet = None  # If Wallet doesn't exist for the user, set wallet to None
+        print('wallet does not exist')
+    '''
+    if request.method == 'POST':
+        print('Request method is POST')
+        form = ReturnRequestForm(request.POST)
+        print('given form is',form)
+        if form.is_valid():
+            return_reason = form.cleaned_data['return_reason']
+            print('returned reason',return_reason)
+            # Create a return request object
+            ReturnRequest.objects.create(order=order,return_reason=return_reason)
+            # Update the order status to "Return Requested"
+            order.status = 'Returned'
+            order.save()
+
+            # Add refunded amount to user's wallet balance
+            '''
+            if wallet:
+                print('wallet exist')
+                wallet.balance = getattr(wallet, 'balance', 0) + order.order_total  # Assuming full refund
+                wallet.save()
+                print('wallet balance',wallet.balanc)
+            '''
+            #messages.success(request, 'Return request submitted successfully.')
+            return redirect('my_orders')
+    else:
+        form = ReturnRequestForm()
+        print('This is else part')
+
+    
+    context = {
+        'form': form,
+        'wallet' : wallet,
+       
+       
+    }
+    return render(request,'accounts/return_request.html',context)
+   
+
+
+def wallet(request):
+    try:
+        wallet = get_object_or_404(Wallet, user=request.user)
+        print('user is',wallet)
+    except ObjectDoesNotExist:
+        wallet = None  # If Wallet doesn't exist for the user, set wallet to None
+
+    context = {
+        'wallet': wallet
+    }
+    return render(request, 'wallet.html', context)
