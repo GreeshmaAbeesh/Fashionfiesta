@@ -144,6 +144,7 @@ class Coupon(models.Model):
 class Wallet(models.Model):
     user = models.OneToOneField(Account, on_delete=models.CASCADE)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
         return self.user.first_name
@@ -155,6 +156,5 @@ class ReturnRequest(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
     return_reason = models.TextField()
     is_returned = models.BooleanField(default=False)  # Add this field
-
 
 

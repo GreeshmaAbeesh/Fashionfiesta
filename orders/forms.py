@@ -33,3 +33,6 @@ class BillingAddressForm(forms.ModelForm):
     class Meta:
         model = BillingAddress
         fields = ['first_name', 'last_name', 'email', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country']
+
+class WalletDeductionForm(forms.Form):
+    deduction_amount = forms.DecimalField(label='Deduction Amount', min_value=0.01, max_digits=10, decimal_places=2, required=True)

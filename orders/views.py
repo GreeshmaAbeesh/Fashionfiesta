@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
-from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm
+from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
 from .models import Order,OrderProduct,Payment,Addresses,Wallet
 from storeitem .models import PopularProduct
 import datetime
@@ -17,6 +17,7 @@ from .models import ReturnRequest,BillingAddress
 from django.db.models import Sum
 import decimal
 from django.db.models import F
+from accounts .models import UserProfile
 
 
 # Create your views here.
@@ -180,6 +181,7 @@ def place_order(request, total=0, quantity=0):
     if cart_count <= 0:
         return redirect('store')
     
+
     
     grand_total =0
     tax = 0
@@ -198,11 +200,17 @@ def place_order(request, total=0, quantity=0):
     #discount = coupons.discount if coupons else Decimal(0)
     #print('discount is',discount)
 
-   
+    wallet = Wallet.objects.get(user=request.user)
+    if wallet.deduction != 0:
+        wallet_deduction = wallet.deduction
+    else:
+        wallet_deduction = 0
+    print('deducted amount',wallet_deduction)
+
     # Calculate the grand total after applying the discount
     grand_total = total
     tax = (2 * total)/100
-    grand_total = float(grand_total) + tax 
+    grand_total = float(grand_total) + tax - float(wallet_deduction)
     #print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
     #print('request.method=',request.method)
 
@@ -248,6 +256,7 @@ def place_order(request, total=0, quantity=0):
                 'total' : total,
                 'tax' : tax,
                 'grand_total' : grand_total,
+                'wallet_deduction' : wallet_deduction,
                 #'coupons' : coupons,
                 #'discount' : discount,
             }
@@ -727,6 +736,29 @@ def coupon_activate(request):
     return render(request, 'orders/payments.html', context)
 '''
 
+
+def cancel_order(request,order_id):
+    order = get_object_or_404(Order, id=order_id)
+    
+    
+    # Implement your cancellation logic here
+    # For example, you can update the order status to "Cancelled"
+    order.status = 'Cancelled'
+    order.save()
+
+    # Decrease the dashboard count for canceled ordered items
+    user_profile = UserProfile.objects.get(user=request.user)
+    user_profile.orders_count = F('orders_count') - 1
+    #user_profile.ordered_items_count = F('ordered_items_count') - ordered_items_count
+    user_profile.save()
+
+
+        
+    return redirect('my_orders') 
+
+
+
+
 def return_request(request,order_id):
     order = get_object_or_404(Order, id=order_id)
     print('order details:',order)
@@ -779,15 +811,39 @@ def wallet(request):
      # Query the return requests associated with the current user
     return_requests = ReturnRequest.objects.filter(order__user=request.user)
     print('order is',return_requests)
-
     total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
 
-    if total_refunded_amount:
+    # Query canceled orders associated with the current user
+    canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
+    total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
+
+      # Calculate total refunded amount and total canceled amount
+    total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
+
+
+    if total_refund_and_canceled_amount:
         # Convert total_refunded_amount to a decimal.Decimal object
-        total_refunded_amount_decimal = decimal.Decimal(str(total_refunded_amount))
+        total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
 
         # Add the total refunded amount to the user's wallet balance
-        wallet.balance = total_refunded_amount_decimal
+        wallet.balance = total_amount_decimal
         wallet.save()
+
+        # Handle wallet deduction form submission
+    if request.method == 'POST':
+        deduction_form = WalletDeductionForm(request.POST)
+        if deduction_form.is_valid():
+            deduction_amount = deduction_form.cleaned_data['deduction_amount']
+            print('deducting amount given', deduction_amount )
+            if deduction_amount <= wallet.balance:
+                # Deduct the amount from the wallet balance
+                wallet.balance -= deduction_amount
+                wallet.deduction = deduction_amount
+                wallet.save()
+                print('wallet balance after deducting',wallet.balance)
+                return render(request,'store/checkout.html') # Redirect to the payment page
+    else:
+        deduction_form = WalletDeductionForm()
+
     # Pass the wallet object to the template
-    return render(request, 'orders/wallet.html', {'wallet': wallet,'return_requests': return_requests})
+    return render(request, 'orders/wallet.html', {'wallet': wallet,'return_requests': return_requests, 'canceled_orders': canceled_orders,'deduction_form': deduction_form})
