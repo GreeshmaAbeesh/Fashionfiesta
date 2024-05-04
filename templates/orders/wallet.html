@@ -17,7 +17,9 @@
             <form method="post">
                 {% csrf_token %}
                 {{ deduction_form.as_p }}
-                <button type="submit">Apply Wallet Balance</button>
+                <button type="submit"  class="btn btn-success btn-block ">Apply Wallet Balance</button>
+                <a href="{% url 'checkout'  %}" class="btn btn-primary btn-block"> checkout </a>
+                
             </form>
         </div>
     </div>

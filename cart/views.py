@@ -1,5 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from storeitem.models import PopularProduct,Variation
+from orders.models import Wallet
 from .models import Cart,CartItem
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
@@ -157,7 +158,8 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
 
 
 @login_required(login_url='login')
-def checkout(request, total=0, quantity=0, cart_items=None):
+def checkout(request,total=0, quantity=0, cart_items=None):
+   # wallet = Wallet.objects.get(id=wallet_id)
     try:
         tax = 0
         grand_total = 0
@@ -177,6 +179,7 @@ def checkout(request, total=0, quantity=0, cart_items=None):
         'cart_items' : cart_items,
         'tax' : tax ,
         'grand_total' : grand_total,
+        #'wallet' : wallet,
     }
     return render(request,'store/checkout.html',context)
 

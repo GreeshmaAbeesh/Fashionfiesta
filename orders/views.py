@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
 from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
-from .models import Order,OrderProduct,Payment,Addresses,Wallet
+from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReport,Coupon,CouponStats
 from storeitem .models import PopularProduct
 import datetime
 import json
@@ -18,6 +18,7 @@ from django.db.models import Sum
 import decimal
 from django.db.models import F
 from accounts .models import UserProfile
+from django.utils import timezone
 
 
 # Create your views here.
@@ -40,15 +41,22 @@ def payments(request):
         status = body['status'],
 
     )
+    print("Payment status ", payment.status)
     payment.save()
 
+    if payment.status == "COMPLETED":
+        order.payment = payment
+        order.is_ordered = True
 
-    order.payment = payment
-    order.is_ordered = True
+        # Set order status as Completed
+        order.status = 'Completed'
+    else:
+        order.payment = payment
+        order.is_ordered = False
 
-    # Set order status as Completed
-    order.status = 'Completed'
-    
+        # Set order status as Completed
+        order.status = 'Not_Completed'
+        
 
     order.save()
 
@@ -234,6 +242,7 @@ def place_order(request, total=0, quantity=0):
             data.order_total = grand_total
             data.tax = tax
             data.ip = request.META.get('REMOTE_ADDR')
+            data.status = "Not_Completed"
             data.save()  #after save we got a data id
             #print(data)
             # generate order_id(ordernumber)
@@ -546,6 +555,20 @@ def coupon(request):
             discount = min(coupon.discount, order_total)
             print('discount value', discount)
 
+
+             # Update coupon count and total discount amount
+           # coupon_count = CouponStats.objects.filter(code=code).count()
+           # total_discount_amount = CouponStats.objects.filter(code=code).aggregate(total_discount=Sum('discount'))['total_discount']
+            
+             # Save coupon count and total discount amount into the database
+            #coupon_stats, created = CouponStats.objects.get_or_create(code=code)
+            #coupon_stats.coupon_count = coupon_count
+            #coupon_stats.total_discount_amount = total_discount_amount
+            #coupon_stats.save()
+
+
+
+
             cart.order_total = order_total - discount  # Subtract the discount, not coupon.discount
             print('cart.order_total is', cart.order_total)
             cart.save()
@@ -554,6 +577,7 @@ def coupon(request):
             cart.coupons.add(coupon)
             print('coupon successfully applied')
             messages.success(request, "Coupon applied successfully.")
+            coupon.save()
     
             return coupon_activate(request)
     return redirect('checkout')            
@@ -605,7 +629,7 @@ def coupon_activate(request,total=0, quantity=0):
     discount = coupons.discount if coupons else Decimal(0)
     print('discount is',discount)
 
-   
+
     # Calculate the grand total after applying the discount
     grand_total = total - discount
     tax = (2 * total)/100
@@ -752,7 +776,34 @@ def cancel_order(request,order_id):
     #user_profile.ordered_items_count = F('ordered_items_count') - ordered_items_count
     user_profile.save()
 
+    try:
+        wallet = Wallet.objects.get(user=request.user)
+        print('wallet is', wallet)
+    except Wallet.DoesNotExist:
+        # If Wallet object doesn't exist, create one for the user
+        wallet = Wallet.objects.create(user=request.user)
 
+
+    # Query the return requests associated with the current user
+    return_requests = ReturnRequest.objects.filter(order__user=request.user)
+    print('order is',return_requests)
+    total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
+
+    # Query canceled orders associated with the current user
+    canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
+    total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
+
+    # Calculate total refunded amount and total canceled amount
+    total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
+
+
+    if total_refund_and_canceled_amount:
+        # Convert total_refunded_amount to a decimal.Decimal object
+        total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
+
+        # Add the total refunded amount to the user's wallet balance
+        wallet.balance = total_amount_decimal
+        wallet.save()
         
     return redirect('my_orders') 
 
@@ -783,7 +834,33 @@ def return_request(request,order_id):
             refunded_amount = order.order_total  # Assuming full refund
             print('refunded amount is:',refunded_amount)
            
+            try:
+                wallet = Wallet.objects.get(user=request.user)
+                print('wallet is', wallet)
+            except Wallet.DoesNotExist:
+                # If Wallet object doesn't exist, create one for the user
+                wallet = Wallet.objects.create(user=request.user)
 
+            # Query the return requests associated with the current user
+            return_requests = ReturnRequest.objects.filter(order__user=request.user)
+            print('order is',return_requests)
+            total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
+
+            # Query canceled orders associated with the current user
+            canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
+            total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
+
+            # Calculate total refunded amount and total canceled amount
+            total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
+
+
+            if total_refund_and_canceled_amount:
+                # Convert total_refunded_amount to a decimal.Decimal object
+                total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
+
+                # Add the total refunded amount to the user's wallet balance
+                wallet.balance = total_amount_decimal
+                wallet.save()
             #messages.success(request, 'Return request submitted successfully.')
             return redirect('my_orders')
     else:
@@ -808,26 +885,26 @@ def wallet(request):
         # If Wallet object doesn't exist, create one for the user
         wallet = Wallet.objects.create(user=request.user)
 
-     # Query the return requests associated with the current user
-    return_requests = ReturnRequest.objects.filter(order__user=request.user)
-    print('order is',return_requests)
-    total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
+    #  # Query the return requests associated with the current user
+    # return_requests = ReturnRequest.objects.filter(order__user=request.user)
+    # print('order is',return_requests)
+    # total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
 
-    # Query canceled orders associated with the current user
-    canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
-    total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
+    # # Query canceled orders associated with the current user
+    # canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
+    # total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
 
-      # Calculate total refunded amount and total canceled amount
-    total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
+    #   # Calculate total refunded amount and total canceled amount
+    # total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
 
 
-    if total_refund_and_canceled_amount:
-        # Convert total_refunded_amount to a decimal.Decimal object
-        total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
+    # if total_refund_and_canceled_amount:
+    #     # Convert total_refunded_amount to a decimal.Decimal object
+    #     total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
 
-        # Add the total refunded amount to the user's wallet balance
-        wallet.balance = total_amount_decimal
-        wallet.save()
+    #     # Add the total refunded amount to the user's wallet balance
+    #     wallet.balance = total_amount_decimal
+    #     wallet.save()
 
         # Handle wallet deduction form submission
     if request.method == 'POST':
@@ -835,15 +912,83 @@ def wallet(request):
         if deduction_form.is_valid():
             deduction_amount = deduction_form.cleaned_data['deduction_amount']
             print('deducting amount given', deduction_amount )
+            wallet = Wallet.objects.get(user=request.user)
             if deduction_amount <= wallet.balance:
                 # Deduct the amount from the wallet balance
-                wallet.balance -= deduction_amount
+                print('wallet balance before deducting',wallet.balance)
+                
+                walletModifiedAmt = wallet.balance - deduction_amount
+                walletCurrentAmt = decimal.Decimal(str(walletModifiedAmt))
                 wallet.deduction = deduction_amount
+                wallet.balance = walletCurrentAmt
+                print("wallet.balance , walletCurrentAmt",wallet.balance, walletCurrentAmt)
                 wallet.save()
                 print('wallet balance after deducting',wallet.balance)
-                return render(request,'store/checkout.html') # Redirect to the payment page
+                #return render(request,'store/checkout.html') # Redirect to the payment page
+                #return redirect('checkout', wallet_id=wallet.id)
+
+                #return render(request, 'orders/wallet.html', {'wallet': wallet,'return_requests': return_requests, 'canceled_orders': canceled_orders,'deduction_form': deduction_form})
     else:
         deduction_form = WalletDeductionForm()
-
+    print('wallet balance in end deducting',wallet.balance)
     # Pass the wallet object to the template
-    return render(request, 'orders/wallet.html', {'wallet': wallet,'return_requests': return_requests, 'canceled_orders': canceled_orders,'deduction_form': deduction_form})
+    return render(request, 'orders/wallet.html', {'wallet': wallet,'deduction_form': deduction_form})
+
+
+
+
+
+def sales_report(request):
+    # Default start and end dates for custom date range
+    start_date = end_date = None
+    
+    # Default date range selection
+    date_range = request.GET.get('date_range', 'custom')
+    
+    # Get today's date
+    today = timezone.now().date()
+    
+    # Set start and end dates based on date range selection
+    if date_range == 'daily':
+        start_date = end_date = today
+    elif date_range == 'weekly':
+        # Assuming week starts from Monday
+        start_date = today - timezone.timedelta(days=today.weekday())
+        end_date = start_date + timezone.timedelta(days=6)
+    elif date_range == 'yearly':
+        start_date = today.replace(month=1, day=1)
+        end_date = today.replace(month=12, day=31)
+    else:
+        # Set default start and end dates
+        start_date = today
+        end_date = today
+    
+    # Get orders within the selected date range
+    orders = Order.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+    
+    # Calculate total sales amount
+    total_sales_amount = orders.aggregate(total_sales=Sum('order_total'))['total_sales'] or 0
+    print("total_sales_amount ",total_sales_amount)
+    # Calculate total discount
+    #total_discount = orders.aggregate(total_discount=Sum(F('orderproduct__product_price') * F('orderproduct__quantity') * F('orderproduct__discount') / 100))['total_discount'] or 0
+    total_discount = 0
+    # Calculate total coupons deduction
+    #total_coupons = orders.aggregate(total_coupons=Sum('payment__coupon_amount'))['total_coupons'] or 0
+    total_coupons = 0
+
+    # Calculate overall sales count
+    overall_sales_count = orders.count()
+    total_coupon_count = Coupon.objects.filter(order__in=orders).count()
+    print("total_coupons",total_coupon_count)
+    context = {
+        'orders': orders,
+        'total_sales_amount': total_sales_amount,
+        'total_discount': total_discount,
+        'total_coupons': total_coupon_count,
+        'overall_sales_count': overall_sales_count,
+        'start_date': start_date,
+        'end_date': end_date,
+        'date_range': date_range,
+    }
+    
+    return render(request, 'sales_report.html', context)

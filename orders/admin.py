@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest
+from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest,Coupon
 
 # Register your models here.
 
@@ -21,6 +21,9 @@ class WalletAdmin(admin.ModelAdmin):
     list_display = ('user','balance')
 
 
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ('user','discount')
+
 class ReturnRequestAdmin(admin.ModelAdmin):
     list_display = ('order','return_reason')
 
@@ -31,6 +34,7 @@ admin.site.register(Order,OrderAdmin)
 admin.site.register(OrderProduct)
 admin.site.register(Addresses)
 admin.site.register(Wallet,WalletAdmin)
+admin.site.register(Coupon,CouponAdmin)
 admin.site.register(ReturnRequest)
 
 

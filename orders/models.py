@@ -25,6 +25,7 @@ class Order(models.Model):
         ('Completed','Completed'),
         ('Cancelled','Cancelled'),
         ('Returned','Returned'),
+        ('Not_Completed','Not_Completed'),
 
     )
 
@@ -140,6 +141,20 @@ class Coupon(models.Model):
         return self.code
     
     
+class CouponStats(models.Model):
+    code = models.OneToOneField(Coupon, on_delete=models.CASCADE, primary_key=True)
+    coupon_count = models.PositiveIntegerField(default=0)
+    total_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def __str__(self):
+        return self.code.code
+
+    def update_stats(self):
+        self.coupon_count = Coupon.objects.filter(code=self.code, active=True).count()
+        self.total_discount_amount = Coupon.objects.filter(code=self.code, active=True).aggregate(total_discount=Sum('discount'))['total_discount']
+        self.save()
+
+
 
 class Wallet(models.Model):
     user = models.OneToOneField(Account, on_delete=models.CASCADE)
@@ -156,5 +171,37 @@ class ReturnRequest(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
     return_reason = models.TextField()
     is_returned = models.BooleanField(default=False)  # Add this field
+
+
+class SalesReport(models.Model):
+    order_date = models.DateField()
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    discount = models.DecimalField(max_digits=10, decimal_places=2)
+    coupon_deduction = models.DecimalField(max_digits=10, decimal_places=2)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE) # Assuming each sales report is associated with a user
+    
+    def __str__(self):
+        return f"Sales Report - {self.order_date}"
+
+    @classmethod
+    def generate_sales_report(cls, start_date, end_date):
+        # This method can be used to generate a sales report for a custom date range
+        sales_reports = cls.objects.filter(order_date__range=[start_date, end_date])
+        return sales_reports
+
+    @classmethod
+    def overall_sales_count(cls):
+        # This method calculates the overall sales count
+        return cls.objects.count()
+
+    @classmethod
+    def overall_order_amount(cls):
+        # This method calculates the overall order amount
+        return cls.objects.aggregate(models.Sum('total_amount'))['total_amount__sum'] or 0
+
+    @classmethod
+    def overall_discount(cls):
+        # This method calculates the overall discount
+        return cls.objects.aggregate(models.Sum('discount'))['discount__sum'] or 0
 
 

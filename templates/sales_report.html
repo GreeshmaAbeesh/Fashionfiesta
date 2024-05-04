@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+<body>
+    <h1>Sales Report</h1>
+
+    <h2>Total Sales Count: {{ overall_sales_count }}</h2>
+    <h2>Total Order Amount: ${{ total_sales_amount }}</h2>
+    <h2>Total Discount Applied: ${{ sales_report.total_discount }}</h2>
+    <h2>Total Coupon Count: ${{ total_coupons }}</h2>
+
+    <h2>Sales Breakdown</h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Order Number</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address Line 1</th>
+                <th>Country</th>
+                <th>State</th>
+                <th>City</th>
+                <th>Order Total</th>
+                <th>Tax</th>
+                <th>Status</th>
+                <th>Is Ordered</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in orders %}
+            <tr>
+                <td>{{ entry.created_at|date:"Y-m-d" }}</td>
+                <td>{{ entry.order_number }}</td>
+                <td>{{ entry.first_name }}</td>
+                <td>{{ entry.last_name }}</td>
+                <td>{{ entry.phone }}</td>
+                <td>{{ entry.email }}</td>
+                <td>{{ entry.address_line_1 }}</td>
+                <td>{{ entry.country }}</td>
+                <td>{{ entry.state }}</td>
+                <td>{{ entry.city }}</td>
+                <td>{{ entry.order_total }}</td>
+                <td>{{ entry.tax }}</td>
+                <td>{{ entry.status }}</td>
+                <td>{{ entry.is_ordered }}</td>
+                <td>{{ entry.created_at }}</td>
+                <td>{{ entry.updated_at }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+
+{% endblock %}

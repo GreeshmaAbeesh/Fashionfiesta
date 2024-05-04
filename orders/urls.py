@@ -15,6 +15,7 @@ urlpatterns = [
     path('return_request/<int:order_id>/', views.return_request, name='return_request'),
     path('wallet/', views.wallet, name='wallet'),
     #path('save_billing_address/', views.save_billing_address, name='save_billing_address'),
+    path('sales_report/', views.sales_report, name='sales_report'),
 
     
 ]
