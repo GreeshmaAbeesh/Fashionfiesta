@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<body>
+    <div class="card text-bg-success mb-3" style="max-width: 50rem;">
+        <div class="card-header">Fashionfiesta Wallet</div>
+        <div class="card-body">
+            <h5 class="card-title">Wallet</h5>
+            <p class="card-text">Hello, {{ user.first_name }}!</p>
+            {% if wallet %}
+                <p>Wallet Balance: {{ wallet.balance }}</p>
+            {% else %}
+                <p>You don't have a wallet yet. Please create one.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+{% endblock %}
+
+

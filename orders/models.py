@@ -146,14 +146,15 @@ class Wallet(models.Model):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return self.first_name
+        return self.user.first_name
     
 
 
 class ReturnRequest(models.Model):
     
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
-    return_reason = models.CharField(max_length=100)
+    return_reason = models.TextField()
+    is_returned = models.BooleanField(default=False)  # Add this field
 
 
 

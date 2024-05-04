@@ -35,6 +35,13 @@
                 <label for="returnReason">Return Reason:</label>
                 <textarea class="form-control" id="returnReason" name="return_reason" rows="3"{{ form.return_reason }}></textarea>
               </div>
+               <!-- Display user's wallet balance if available -->
+               {% if wallet %}
+               <div class="form-group">
+                 <label for="walletBalance">Your Wallet Balance:</label>
+                 <input type="text" class="form-control" id="walletBalance" value="{{ wallet.balance }}" readonly>
+               </div>
+               {% endif %}
               <button type="submit" class="btn btn-primary">Submit</button>
             </form>
           </div>

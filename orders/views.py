@@ -14,7 +14,9 @@ from decimal import Decimal
 from coupons.models import Coupon
 from django.core.exceptions import ObjectDoesNotExist
 from .models import ReturnRequest,BillingAddress
-
+from django.db.models import Sum
+import decimal
+from django.db.models import F
 
 
 # Create your views here.
@@ -729,14 +731,7 @@ def return_request(request,order_id):
     order = get_object_or_404(Order, id=order_id)
     print('order details:',order)
    
-    '''
-    try:
-        wallet = get_object_or_404(Wallet, user=request.user)
-        print('wallet exist')
-    except Wallet.DoesNotExist:
-        wallet = None  # If Wallet doesn't exist for the user, set wallet to None
-        print('wallet does not exist')
-    '''
+   
     if request.method == 'POST':
         print('Request method is POST')
         form = ReturnRequestForm(request.POST)
@@ -748,16 +743,15 @@ def return_request(request,order_id):
             ReturnRequest.objects.create(order=order,return_reason=return_reason)
             # Update the order status to "Return Requested"
             order.status = 'Returned'
+            order.is_returned = True
             order.save()
 
-            # Add refunded amount to user's wallet balance
-            '''
-            if wallet:
-                print('wallet exist')
-                wallet.balance = getattr(wallet, 'balance', 0) + order.order_total  # Assuming full refund
-                wallet.save()
-                print('wallet balance',wallet.balanc)
-            '''
+            
+            # Calculate refunded amount and add it to user's wallet balance
+            refunded_amount = order.order_total  # Assuming full refund
+            print('refunded amount is:',refunded_amount)
+           
+
             #messages.success(request, 'Return request submitted successfully.')
             return redirect('my_orders')
     else:
@@ -767,22 +761,33 @@ def return_request(request,order_id):
     
     context = {
         'form': form,
-        'wallet' : wallet,
        
        
     }
     return render(request,'accounts/return_request.html',context)
    
 
-
 def wallet(request):
+   
     try:
-        wallet = get_object_or_404(Wallet, user=request.user)
-        print('user is',wallet)
-    except ObjectDoesNotExist:
-        wallet = None  # If Wallet doesn't exist for the user, set wallet to None
+        wallet = Wallet.objects.get(user=request.user)
+        print('wallet is', wallet)
+    except Wallet.DoesNotExist:
+        # If Wallet object doesn't exist, create one for the user
+        wallet = Wallet.objects.create(user=request.user)
 
-    context = {
-        'wallet': wallet
-    }
-    return render(request, 'wallet.html', context)
+     # Query the return requests associated with the current user
+    return_requests = ReturnRequest.objects.filter(order__user=request.user)
+    print('order is',return_requests)
+
+    total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
+
+    if total_refunded_amount:
+        # Convert total_refunded_amount to a decimal.Decimal object
+        total_refunded_amount_decimal = decimal.Decimal(str(total_refunded_amount))
+
+        # Add the total refunded amount to the user's wallet balance
+        wallet.balance = total_refunded_amount_decimal
+        wallet.save()
+    # Pass the wallet object to the template
+    return render(request, 'orders/wallet.html', {'wallet': wallet,'return_requests': return_requests})
