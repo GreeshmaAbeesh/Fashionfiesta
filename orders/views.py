@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
 from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
-from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReport,Coupon,CouponStats
+from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew,Coupon,CouponStats
 from storeitem .models import PopularProduct
 import datetime
 import json
@@ -19,6 +19,9 @@ import decimal
 from django.db.models import F
 from accounts .models import UserProfile
 from django.utils import timezone
+from datetime import datetime as mydatetime
+from django.db import transaction
+
 
 
 # Create your views here.
@@ -577,6 +580,17 @@ def coupon(request):
             cart.coupons.add(coupon)
             print('coupon successfully applied')
             messages.success(request, "Coupon applied successfully.")
+            currentuser = request.user
+            orders = Order.objects.filter(user=currentuser, is_ordered=False)
+
+            if orders.exists():
+                # Assuming there's only one active order for a user at a time
+                order = orders.first()
+                order.coupon_count += 1
+                order.coupon_total += discount
+                order.save()
+            else:
+                raise ("No active order found for the user.")
             coupon.save()
     
             return coupon_activate(request)
@@ -652,15 +666,27 @@ def coupon_activate(request,total=0, quantity=0):
             data.save()  #after save we got a data id
             #print(data)
             # generate order_id(ordernumber)
-            yr = int(datetime.date.today().strftime('%Y'))
-            dt = int(datetime.date.today().strftime('%d'))
-            mt = int(datetime.date.today().strftime('%m'))
-            d = datetime.date(yr,mt,dt)
-            current_date = d.strftime('%Y%m%d') #20240314
+            # yr = int(datetime.date.today().strftime('%Y'))
+            # dt = int(datetime.date.today().strftime('%d'))
+            # mt = int(datetime.date.today().strftime('%m'))
+            # d = datetime.date(yr,mt,dt)
+            # current_date = d.strftime('%Y%m%d') #20240314
+            # print(current_date)
+            # order_number = current_date + str(data.id)
+            # data.order_number = order_number
+            # #data.order_id = str(data.id)
+            # print('data.order_number...',data.order_number)
+            yr = int(mydatetime.today().strftime('%Y'))
+            dt = int(mydatetime.today().strftime('%d'))
+            mt = int(mydatetime.today().strftime('%m'))
+            d = mydatetime(yr, mt, dt)
+            current_date = d.strftime('%Y%m%d')  # 20240314
             print(current_date)
             order_number = current_date + str(data.id)
             data.order_number = order_number
-            print('data.order_number...',data.order_number)
+            data.order_id = str(data.id)
+            print('data.order_number...', data.order_number)
+            print('data.order_ID...',data.order_id)
             #data.first_name = first_name
             data.save()
             print('data',data)
@@ -960,31 +986,113 @@ def sales_report(request):
         end_date = today.replace(month=12, day=31)
     else:
         # Set default start and end dates
-        start_date = today
+        start_date = mydatetime(today.year, today.month, 1).date()
         end_date = today
     
     # Get orders within the selected date range
-    orders = Order.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
-    
+    orders = Order.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).order_by('-created_at')
+
     # Calculate total sales amount
-    total_sales_amount = orders.aggregate(total_sales=Sum('order_total'))['total_sales'] or 0
+    total_sales_amount = round(orders.aggregate(total_sales=Sum('order_total'))['total_sales'] or 0, 2)
     print("total_sales_amount ",total_sales_amount)
     # Calculate total discount
     #total_discount = orders.aggregate(total_discount=Sum(F('orderproduct__product_price') * F('orderproduct__quantity') * F('orderproduct__discount') / 100))['total_discount'] or 0
     total_discount = 0
     # Calculate total coupons deduction
     #total_coupons = orders.aggregate(total_coupons=Sum('payment__coupon_amount'))['total_coupons'] or 0
-    total_coupons = 0
+    #total_coupons = 0
+    total_coupon_count = 0
 
     # Calculate overall sales count
     overall_sales_count = orders.count()
-    total_coupon_count = Coupon.objects.filter(order__in=orders).count()
+    currentuser = request.user
+    current_user_orders = Order.objects.filter(user=currentuser)
+    currentuser = request.user
+    print("currentuser, current_user_orders, ", currentuser , current_user_orders )
+    if current_user_orders.exists():
+        # for order in current_user_orders:
+        #     order.coupon_count = 0
+        #     order.coupon_total = 0
+        #     order.save()
+        # Aggregate total coupon count and total discount across all orders related to the current user
+        total_coupon_count = current_user_orders.aggregate(total_coupons=Sum('coupon_count'))['total_coupons'] or 0
+        total_discount = current_user_orders.aggregate(total_discount=Sum('coupon_total'))['total_discount'] or 0
+
+         # Update the coupon_count field for each order in current_user_orders
+        #with transaction.atomic():
+            # Update the coupon_count and coupon_total fields
+        #    current_user_orders.update(coupon_count=total_coupon_count, coupon_total=total_discount)
+
+
+    else:
+        # If no orders exist for the current user, set default values
+        total_coupon_count = 0
+        total_discount = 0
+
+    #total_coupon_count_rounded_amount = round(total_coupon_count, 2)
+    #total_discount_rounded_amount = round(total_discount, 2)
+     # Create a SalesReport instance
+    '''
+    sales_report_instance = SalesReportNew.objects.create(
+        overall_sales_count=overall_sales_count,
+        total_sales_amount=total_sales_amount,
+        total_discount=total_discount,
+        total_coupon_count=total_coupon_count,
+        start_date=start_date,
+        end_date=end_date,
+        date_range=date_range
+    )
+    '''
+    # Check if SalesReport instance already exists for the specified date range
+    sales_report_instance = SalesReportNew.objects.filter(
+        start_date=start_date,
+        end_date=end_date,
+        date_range=date_range
+        ).first()
+    if sales_report_instance:
+        # Update existing instance
+        sales_report_instance.overall_sales_count = overall_sales_count
+        sales_report_instance.total_sales_amount = total_sales_amount
+        sales_report_instance.total_discount = total_discount
+        sales_report_instance.total_coupon_count = total_coupon_count
+        sales_report_instance.save()
+    else:
+        # Create new instance
+        sales_report_instance = SalesReportNew.objects.create(
+            start_date=start_date,
+            end_date=end_date,
+            date_range=date_range,
+            overall_sales_count=overall_sales_count,
+            total_sales_amount=total_sales_amount,
+            total_discount=total_discount,
+            total_coupon_count=total_coupon_count
+        )
+    
+     # Calculate the amount somehow
+    #amount = calculate_amount_somehow()
+
+    # Ensure that the amount does not exceed the defined precision
+    # You may need to round the amount if necessary
+    #rounded_amount = round(amount, 2)
+
+    # Create an instance of SalesReportNew with the rounded amount
+    #sales_report_instance = SalesReportNew.objects.create(amount=rounded_amount)
+
+    
+
     print("total_coupons",total_coupon_count)
+    print( 'total_sales_amount',total_sales_amount)
+    print( 'total_discount', total_discount)
+    print ('total_coupon_count', total_coupon_count)
+    print('overall_sales_count', overall_sales_count)
+
+    
     context = {
         'orders': orders,
+        'sales_report_instance': sales_report_instance,
         'total_sales_amount': total_sales_amount,
         'total_discount': total_discount,
-        'total_coupons': total_coupon_count,
+        'total_coupon_count': total_coupon_count,
         'overall_sales_count': overall_sales_count,
         'start_date': start_date,
         'end_date': end_date,

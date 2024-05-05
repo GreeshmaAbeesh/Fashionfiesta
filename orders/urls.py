@@ -1,5 +1,6 @@
 from django.urls import path
 from .import views
+#from .views import SalesReportAdminView
 
 urlpatterns = [
     path('place_order/',views.place_order,name='place_order'),
@@ -16,6 +17,7 @@ urlpatterns = [
     path('wallet/', views.wallet, name='wallet'),
     #path('save_billing_address/', views.save_billing_address, name='save_billing_address'),
     path('sales_report/', views.sales_report, name='sales_report'),
+    #path('sales_report/', SalesReportAdminView.as_view(), name='sales_report'),
 
     
 ]

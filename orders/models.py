@@ -3,6 +3,7 @@ from accounts.models import Account
 from storeitem.models import PopularProduct,Variation
 from django.conf import settings
 from django.core.validators import MinValueValidator
+import uuid
 
 # Create your models here.
 
@@ -44,7 +45,8 @@ class Order(models.Model):
     order_note = models.CharField(max_length=100, blank=True)
     order_total = models.FloatField()
     tax = models.FloatField()
-    
+    coupon_count = models.PositiveIntegerField(default=0)
+    coupon_total = models.PositiveIntegerField(default=0)
     status = models.CharField(max_length=50,choices=STATUS, default='New')
     ip = models.CharField(max_length=20, blank=True)
     is_ordered = models.BooleanField(default=False)
@@ -172,7 +174,7 @@ class ReturnRequest(models.Model):
     return_reason = models.TextField()
     is_returned = models.BooleanField(default=False)  # Add this field
 
-
+'''
 class SalesReport(models.Model):
     order_date = models.DateField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -204,4 +206,28 @@ class SalesReport(models.Model):
         # This method calculates the overall discount
         return cls.objects.aggregate(models.Sum('discount'))['discount__sum'] or 0
 
+'''
 
+
+
+class SalesReportNew(models.Model):
+    # overall_sales_count = models.IntegerField(default=0)
+    # #overall_sales_count = models.BigIntegerField(default=0)
+    # total_sales_amount = models.DecimalField(max_digits=10, decimal_places=10, default=0)
+    # total_discount = models.DecimalField(max_digits=10, decimal_places=10, default=0)
+    # total_coupon_count = models.IntegerField(default=0)
+    # #total_coupon_count = models.BigIntegerField(default=0)
+    # start_date = models.DateField()
+    # end_date = models.DateField()
+    # date_range = models.CharField(max_length=50)
+    overall_sales_count = models.BigIntegerField(default=0)
+    total_sales_amount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    total_discount = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    total_coupon_count = models.BigIntegerField(default=0)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    date_range = models.CharField(max_length=50)
+
+
+    def __str__(self):
+        return f"Sales Report from {self.start_date} to {self.end_date}"
