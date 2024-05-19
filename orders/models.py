@@ -227,6 +227,8 @@ class SalesReportNew(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     date_range = models.CharField(max_length=50)
+    
+
 
 
     def __str__(self):

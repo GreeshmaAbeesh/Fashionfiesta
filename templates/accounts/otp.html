@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+<!--{% extends 'base.html' %}
 
 {% block content %}
 <br>
@@ -11,7 +11,7 @@
             {% include 'includes/alert.html' %}
             <h4 class="card-title mb-4">OTP Verification</h4>
             
-            <form action="{% url 'otp_verification' %}" method="POST">
+            <form action="#" method="POST">
                 {% csrf_token %}
                 <center>Enter the otp: <input type="text" placeholder="Enter the otp" name="otp"></center><br><br>
                 <center><button type="submit">verify</button></center>
@@ -23,7 +23,7 @@
 {% endblock %}
 
 
-<!--
+<!-
 <center><strong>CONFIRM YOR LOGIN</strong></center>
 
 <center><p>check inbox of your email-{{email}}-and enter the otp</p></center>
@@ -35,4 +35,4 @@
         <center><button type="submit">verify</button></center>
     </form>
 </body>
--->
+->-->

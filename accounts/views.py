@@ -89,7 +89,7 @@ def activate(request, uidb64, token):
         return redirect('login')
     else:
         return HttpResponse('Activation link is invalid or expired.')
-                  
+'''                  
 
 def login(request):
     if request.method == 'POST':
@@ -106,9 +106,11 @@ def login(request):
             messages.error(request,'Invalid login credentials')
             return redirect('login')
     return render(request,'accounts/login.html')
+
+
+
+
 '''
-
-
 def login(request):
      
     if request.method=='POST':
@@ -137,7 +139,7 @@ def login(request):
     
 
 
-'''
+
 def send_otp(request):
     s=""
     for x in range(0,4):
@@ -145,8 +147,9 @@ def send_otp(request):
     request.session["otp"]=s
     send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
     return render(request,"accounts/otp.html")
-'''
 
+
+# working otp
 
 def send_otp(request):
     otp=''.join(str(random.randint(0,9)) for _ in range(4))
@@ -206,7 +209,7 @@ def otp_verification(request):
     print("Not OTP post case") 
     return render(request,"accounts/otp.html")
 
-     
+ '''    
 
 
 @login_required(login_url='login') # we can logged out the system when you are log in.

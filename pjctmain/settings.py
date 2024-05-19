@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'orders',
     'coupons',
     'wishlist',
+    'easy_pdf',
     
     
     

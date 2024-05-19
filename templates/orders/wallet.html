@@ -2,28 +2,29 @@
 {% load static %}
 
 {% block content %}
-<body>
-    <div class="card text-bg-success mb-3" style="max-width: 50rem;">
-        <div class="card-header">Fashionfiesta Wallet</div>
-        <div class="card-body">
-            <h5 class="card-title">Wallet</h5>
-            <p class="card-text">Hello, {{ user.first_name }}!</p>
-            {% if wallet %}
-                <p>Wallet Balance: {{ wallet.balance }}</p>
-            {% else %}
-                <p>You don't have a wallet yet. Please create one.</p>
-            {% endif %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card text-bg-success mb-3">
+                <div class="card-header">Fashionfiesta Wallet</div>
+                <div class="card-body">
+                    <h5 class="card-title">Wallet</h5>
+                    <p class="card-text">Hello, {{ user.first_name }}!</p>
+                    {% if wallet %}
+                        <p>Wallet Balance: {{ wallet.balance }}</p>
+                    {% else %}
+                        <p>You don't have a wallet yet. Please create one.</p>
+                    {% endif %}
 
-            <form method="post">
-                {% csrf_token %}
-                {{ deduction_form.as_p }}
-                <button type="submit"  class="btn btn-success btn-block ">Apply Wallet Balance</button>
-                <a href="{% url 'checkout'  %}" class="btn btn-primary btn-block"> checkout </a>
-                
-            </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ deduction_form.as_p }}
+                        <button type="submit" class="btn btn-success btn-block">Apply Wallet Balance</button>
+                        <a href="{% url 'checkout'  %}" class="btn btn-primary btn-block">Checkout</a>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
-</body>
+</div>
 {% endblock %}
-
-

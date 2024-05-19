@@ -5,16 +5,66 @@
 
 
 <body>
-    <h1>Sales Report</h1>
 
-    <h2>Total Sales Count: {{ overall_sales_count }}</h2>
-    <h2>Total Order Amount: {{ total_sales_amount }}</h2>
-    <h2>Total Discount Applied: {{ total_discount  }}</h2>
-    <h2>Total Coupon Count: {{total_coupon_count }}</h2>
-
-    <h2>Sales Breakdown</h2>
-    <table border="1">
-        <thead>
+    <div class="container">
+      <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+          <div class="card">
+            <div class="card-header">
+              <h1 class="text-center">Sales Report</h1>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h5>Total Sales Count: {{ overall_sales_count }}</h5>
+                  <h5>Total Coupon Count: {{ total_coupon_count }}</h5>
+                </div>
+                <div class="col-md-6">
+                  <h5>Total Order Amount: {{ total_sales_amount }}</h5>
+                  <h5>Total Discount Applied: {{ total_discount }}</h5>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  
+    <div class="container mt-5">
+        <h2>Sales Breakdown</h2>
+      
+        <div class="row mt-3">
+          <div class="col-md-4">
+            <label for="dateFilter" class="form-label">Select Date:</label>
+            <select id="dateFilter" class="form-select">
+              <option value="">All Dates</option>
+              <!-- Populate with unique dates -->
+              <!-- Example: <option value="2024-05-01">2024-05-01</option> -->
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="monthFilter" class="form-label">Select Month:</label>
+            <select id="monthFilter" class="form-select">
+              <option value="">All Months</option>
+              <!-- Populate with unique months -->
+              <!-- Example: <option value="05">May</option> -->
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label for="yearFilter" class="form-label">Select Year:</label>
+            <select id="yearFilter" class="form-select">
+              <option value="">All Years</option>
+              <!-- Populate with unique years -->
+              <!-- Example: <option value="2024">2024</option> -->
+            </select>
+          </div>
+        </div>
+      
+        <table class="table table-bordered table-striped mt-3">
+          <thead>
             <tr>
                 <th>Date</th>
                 <th>Order Number</th>
@@ -33,30 +83,159 @@
                 <th>Created At</th>
                 <th>Updated At</th>
             </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody id="salesTableBody">
+            <!-- Sales data will be populated here -->
+             <!-- Sales data will be populated here -->
             {% for entry in orders %}
-            <tr>
-                <td>{{ entry.created_at|date:"Y-m-d" }}</td>
-                <td>{{ entry.order_number }}</td>
-                <td>{{ entry.first_name }}</td>
-                <td>{{ entry.last_name }}</td>
-                <td>{{ entry.phone }}</td>
-                <td>{{ entry.email }}</td>
-                <td>{{ entry.address_line_1 }}</td>
-                <td>{{ entry.country }}</td>
-                <td>{{ entry.state }}</td>
-                <td>{{ entry.city }}</td>
-                <td>{{ entry.order_total }}</td>
-                <td>{{ entry.tax }}</td>
-                <td>{{ entry.status }}</td>
-                <td>{{ entry.is_ordered }}</td>
-                <td>{{ entry.created_at }}</td>
-                <td>{{ entry.updated_at }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                <tr>
+                    <td>{{ entry.created_at|date:"Y-m-d" }}</td>
+                    <td>{{ entry.order_number }}</td>
+                    <td>{{ entry.first_name }}</td>
+                    <td>{{ entry.last_name }}</td>
+                    <td>{{ entry.phone }}</td>
+                    <td>{{ entry.email }}</td>
+                    <td>{{ entry.address_line_1 }}</td>
+                    <td>{{ entry.country }}</td>
+                    <td>{{ entry.state }}</td>
+                    <td>{{ entry.city }}</td>
+                    <td>{{ entry.order_total }}</td>
+                    <td>{{ entry.tax }}</td>
+                    <td>{{ entry.status }}</td>
+                    <td>{{ entry.is_ordered }}</td>
+                    <td>{{ entry.created_at }}</td>
+                    <td>{{ entry.updated_at }}</td>
+                </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // JavaScript for populating dropdown filters and filtering data
+  // Replace placeholder values with your actual data
+  document.addEventListener("DOMContentLoaded", function() {
+    // Example data
+    var orders = [
+      // Replace this with the actual data from your server
+      {% for entry in orders %}
+      {
+        created_at: "{{ entry.created_at }}",
+        order_number: "{{ entry.order_number }}",
+        first_name: "{{ entry.first_name }}",
+        last_name: "{{ entry.last_name }}",
+        phone: "{{ entry.phone }}",
+        email: "{{ entry.email }}",
+        address_line_1: "{{ entry.address_line_1 }}",
+        country: "{{ entry.country }}",
+        state: "{{ entry.state }}",
+        city: "{{ entry.city }}",
+        order_total: "{{ entry.order_total }}",
+        tax: "{{ entry.tax }}",
+        status: "{{ entry.status }}",
+        is_ordered: "{{ entry.is_ordered }}",
+        created_at: "{{ entry.created_at }}",
+        updated_at: "{{ entry.updated_at }}"
+      },
+      {% endfor %}
+    ];
+
+    // Function to populate dropdowns
+    function populateDropdowns() {
+      var dates = [], months = [], years = [];
+      orders.forEach(function(order) {
+        var date = new Date(order.created_at);
+        dates.push(order.created_at);
+        months.push((date.getMonth() + 1).toString().padStart(2, '0'));
+        years.push(date.getFullYear());
+      });
+      dates = Array.from(new Set(dates));
+      months = Array.from(new Set(months));
+      years = Array.from(new Set(years));
+      
+      var dateFilterSelect = document.getElementById("dateFilter");
+      var monthFilterSelect = document.getElementById("monthFilter");
+      var yearFilterSelect = document.getElementById("yearFilter");
+      
+      // Clear previous options
+      dateFilterSelect.innerHTML = "<option value=''>All Dates</option>";
+      monthFilterSelect.innerHTML = "<option value=''>All Months</option>";
+      yearFilterSelect.innerHTML = "<option value=''>All Years</option>";
+      
+      // Populate options
+      dates.forEach(function(date) {
+        dateFilterSelect.innerHTML += "<option value='" + date + "'>" + date + "</option>";
+      });
+      months.forEach(function(month) {
+        monthFilterSelect.innerHTML += "<option value='" + month + "'>" + month + "</option>";
+      });
+      years.forEach(function(year) {
+        yearFilterSelect.innerHTML += "<option value='" + year + "'>" + year + "</option>";
+      });
+    }
+    
+    // Function to filter data based on dropdown selections
+    function filterData() {
+      var dateFilterValue = document.getElementById("dateFilter").value;
+      var monthFilterValue = document.getElementById("monthFilter").value;
+      var yearFilterValue = document.getElementById("yearFilter").value;
+      
+      var filteredOrders = orders.filter(function(order) {
+        var date = new Date(order.created_at);
+        var orderDate = order.created_at;
+        var orderMonth = (date.getMonth() + 1).toString().padStart(2, '0');
+        var orderYear = date.getFullYear().toString();
+        
+        return (dateFilterValue === "" || orderDate === dateFilterValue) &&
+               (monthFilterValue === "" || orderMonth === monthFilterValue) &&
+               (yearFilterValue === "" || orderYear === yearFilterValue);
+      });
+      
+      populateSalesTable(filteredOrders);
+    }
+    
+    // Function to populate sales table
+    function populateSalesTable(orders) {
+      var salesTableBody = document.getElementById("salesTableBody");
+      salesTableBody.innerHTML = "";
+      orders.forEach(function(order) {
+        salesTableBody.innerHTML += "<tr>" +
+          "<td>" + order.created_at + "</td>" +
+          "<td>" + order.order_number + "</td>" +
+          "<td>" + order.first_name + "</td>" +
+          "<td>" + order.last_name + "</td>" +
+          "<td>" + order.phone + "</td>" +
+          "<td>" + order.email + "</td>" +
+          "<td>" + order.address_line_1 + "</td>" +
+          "<td>" + order.country + "</td>" +
+          "<td>" + order.state + "</td>" +
+          "<td>" + order.city + "</td>" +
+          "<td>" + order.order_total + "</td>" +
+          "<td>" + order.tax + "</td>" +
+          "<td>" + order.status + "</td>" +
+          "<td>" + order.is_ordered + "</td>" +
+          "<td>" + order.created_at + "</td>" +
+          "<td>" + order.updated_at + "</td>" +
+          "</tr>";
+      });
+    }
+    
+    // Populate dropdowns and sales table on page load
+    populateDropdowns();
+    populateSalesTable(orders);
+    
+    // Add event listeners to dropdowns for filtering data
+    document.getElementById("dateFilter").addEventListener("change", filterData);
+    document.getElementById("monthFilter").addEventListener("change", filterData);
+    document.getElementById("yearFilter").addEventListener("change", filterData);
+  });
+</script>
+
+      
+    
 </body>
 
 

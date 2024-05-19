@@ -21,6 +21,16 @@ from accounts .models import UserProfile
 from django.utils import timezone
 from datetime import datetime as mydatetime
 from django.db import transaction
+from django.http import HttpResponseBadRequest
+from django.http import Http404
+#from django.http import FileResponse
+#import io
+#from reportlab.pdfgen import canvas
+#from reportlab.lib.units import inch
+#from reportlab.lib.pagesizes import letter
+from django.core.exceptions import ValidationError
+from django.views.generic import TemplateView
+
 
 
 
@@ -211,12 +221,29 @@ def place_order(request, total=0, quantity=0):
     #discount = coupons.discount if coupons else Decimal(0)
     #print('discount is',discount)
 
-    wallet = Wallet.objects.get(user=request.user)
-    if wallet.deduction != 0:
-        wallet_deduction = wallet.deduction
-    else:
-        wallet_deduction = 0
+    # Fetch the user's wallet
+    try:
+        wallet = Wallet.objects.get(user=request.user)
+        print('wallet is', wallet)
+    except Wallet.DoesNotExist:
+        # If Wallet object doesn't exist, create one for the user
+        wallet = Wallet.objects.create(user=request.user)
+
+    # Check if there is any deduction in the wallet
+    wallet_deduction = wallet.deduction if wallet else 0
     print('deducted amount',wallet_deduction)
+
+
+
+
+    #wallet = Wallet.objects.get(user=request.user)
+    #if wallet.deduction != 0:
+    #    wallet_deduction = wallet.deduction
+    #else:
+    #    wallet_deduction = 0
+    #print('deducted amount',wallet_deduction)
+
+
 
     # Calculate the grand total after applying the discount
     grand_total = total
@@ -311,6 +338,27 @@ def order_complete(request):
     except (Payment.DoesNotExist,Order.DoesNotExist):
         return redirect('home')
     
+'''
+# Generate pdf for invoice
+def order_complete_pdf(request):
+    #create bytestream buffer
+    buff = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter, bottoup=0)
+    # create a text object
+    textob = c.beginText()
+    textob.setTextOrgin(inch,inch)
+    textob.setFont("Helvetica",14)
+
+    #Add some lines of text
+    lines = [
+        "This is line 1",
+        "This is line 2",
+        "This is line 3",
+      
+    ]
+
+'''
+
 '''
 def cash_on_delivery(request):
     if request.method == "POST":
@@ -413,6 +461,14 @@ def cash_on_delivery(request):
     except Cart.DoesNotExist:
         # Redirect the user back to the store if the cart is empty or doesn't exist
         return redirect('store')
+    
+     # Calculate the total order amount
+    total_amount = sum(item.product.price * item.quantity for item in CartItem.objects.filter(cart=cart))
+    
+    # Check if the total amount exceeds Rs. 1000
+    if total_amount > 1000:
+        return HttpResponseBadRequest("COD not allowed for orders above Rs. 1000")
+    
     
     cart_items = CartItem.objects.filter(cart=cart)
     print('cartitems: ',cart_items)
@@ -540,6 +596,8 @@ def coupon(request):
             print('given value is not coupon')
             return redirect("checkout")
         
+        
+        
 
         # Check if the code is the default code
         default_code = "CODE123"
@@ -589,8 +647,9 @@ def coupon(request):
                 order.coupon_count += 1
                 order.coupon_total += discount
                 order.save()
-            else:
-                raise ("No active order found for the user.")
+            #else:
+            #    messages.error(request, "No active order found for the user.")
+            #    return redirect("checkout")
             coupon.save()
     
             return coupon_activate(request)
@@ -1100,3 +1159,5 @@ def sales_report(request):
     }
     
     return render(request, 'sales_report.html', context)
+
+

@@ -1,12 +1,14 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from storeitem.models import PopularProduct,Variation
-from orders.models import Wallet
+from orders.models import Wallet,OrderProduct
+from category.models import Category
 from .models import Cart,CartItem
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import F
+from django.db.models import Count
 # Create your views here.
 
 
@@ -183,4 +185,21 @@ def checkout(request,total=0, quantity=0, cart_items=None):
     }
     return render(request,'store/checkout.html',context)
 
+'''
+def get_best_selling_products():
+    """
+    Get the top 10 best-selling products
+    """
+    best_selling_products = OrderProduct.objects.values('product').annotate(total_sales=Count('product')).order_by('-total_sales')[:10]
+    product_ids = [item['product'] for item in best_selling_products]
+    return PopularProduct.objects.filter(id__in=product_ids)
 
+def get_best_selling_categories():
+    """
+    Get the top 10 best-selling categories
+    """
+    best_selling_categories = OrderProduct.objects.values('product__category').annotate(total_sales=Count('product__category')).order_by('-total_sales')[:10]
+    category_ids = [item['product__category'] for item in best_selling_categories]
+    return Category.objects.filter(id__in=category_ids)
+
+'''

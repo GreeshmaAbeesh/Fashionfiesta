@@ -4,6 +4,12 @@ from django.db.models import Sum
 from django.views import View
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
+from django.utils.translation import gettext_lazy as _
+from django.db.models.functions import ExtractMonth, ExtractYear
+from django.db.models import DateField, Count, Sum
+
+
+
 #from .views import sales_report  # Import your existing sales_report view
 #from django.views.generic import TemplateView
 #from django.urls import path
@@ -71,9 +77,8 @@ class SalesReportAdminView(View):
 
 class SalesReportNewAdmin(admin.ModelAdmin):
     list_display = ['start_date', 'end_date', 'date_range', 'overall_sales_count', 'total_sales_amount', 'total_discount', 'total_coupon_count']
-
-
-
+    
+   
 
 
 admin.site.register(Payment)
