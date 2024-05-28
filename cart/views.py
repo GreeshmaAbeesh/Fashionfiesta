@@ -9,6 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import F
 from django.db.models import Count
+
+from django.utils import timezone
+#from .models import ProductOffer
 # Create your views here.
 
 
@@ -129,6 +132,17 @@ def remove_cart_item(request, product_id,cart_item_id):
     return redirect('cart')
 
 
+'''
+def apply_offers(product):
+    try:
+        offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+        if offer:
+            return product.price * (1 - (offer.discount_percentage / 100))
+        else:
+            return product.price
+    except ProductOffer.DoesNotExist:
+        return product.price
+'''    
 
         
     

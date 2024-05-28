@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
 from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
-from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew,Coupon,CouponStats
+from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew,Coupon
 from storeitem .models import PopularProduct
 import datetime
 import json
@@ -30,6 +30,12 @@ from django.http import Http404
 #from reportlab.lib.pagesizes import letter
 from django.core.exceptions import ValidationError
 from django.views.generic import TemplateView
+
+from django.http import HttpResponse
+from django.shortcuts import render
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 
 
@@ -288,6 +294,11 @@ def place_order(request, total=0, quantity=0):
             print('data',data)
             
             order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)  # true when payment is successful
+            
+            # Reset the wallet deduction after order placement
+            wallet.deduction = 0
+            wallet.save()
+            
             context = {
                 #'order' : order,
                 'order' : order,
@@ -309,34 +320,68 @@ def place_order(request, total=0, quantity=0):
         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
 
 
+def generate_pdf(request, order_number):
+    try:
+        # Fetch order data
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_products = OrderProduct.objects.filter(order=order)
 
+        # Calculate subtotal
+        subtotal = sum(item.product_price * item.quantity for item in ordered_products)
+
+        # Prepare context for the template
+        context = {
+            'order': order,
+            'ordered_products': ordered_products,
+            'subtotal': subtotal,
+        }
+
+        # Render template
+        template_path = 'orders/invoice_template.html'  # Update with your invoice template path
+        template = get_template(template_path)
+        html = template.render(context)
+
+        # Generate PDF
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{order.order_number}_invoice.pdf"'
+
+        # Generate PDF file
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+
+        return response
+
+    except Order.DoesNotExist:
+        return HttpResponse('Order not found.')
+    
 
 def order_complete(request):
-    order_number  = request.GET.get('order_number')
-    print('order_number in order_complete',order_number)
+    order_number = request.GET.get('order_number')
     transID = request.GET.get('payment_id')
-    
+
+    if request.GET.get('format') == 'pdf':
+        return generate_pdf(request, order_number)
+
     try:
-        order = Order.objects.get(order_number=order_number,is_ordered=True)
-        ordered_products = OrderProduct.objects.filter(order_id=order.id)
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_products = OrderProduct.objects.filter(order=order)
 
-        subtotal = 0
-        for i in ordered_products:
-            subtotal += i.product_price*i.quantity
-
-        payment = Payment.objects.get(payment_id = transID)
+        subtotal = sum(item.product_price * item.quantity for item in ordered_products)
+        payment = Payment.objects.get(payment_id=transID)
 
         context = {
-            'order' : order,
-            'ordered_products' : ordered_products,
-            'order_number' : order.order_number,
-            'transID' : payment.payment_id,     #doubt
-            'payment' : payment,
-            'subtotal' : subtotal,
+            'order': order,
+            'ordered_products': ordered_products,
+            'order_number': order.order_number,
+            'transID': payment.payment_id,
+            'payment': payment,
+            'subtotal': subtotal,
         }
-        return render(request,'orders/order_complete.html',context)
-    except (Payment.DoesNotExist,Order.DoesNotExist):
+        return render(request, 'orders/order_complete.html', context)
+    except (Payment.DoesNotExist, Order.DoesNotExist):
         return redirect('home')
+
     
 '''
 # Generate pdf for invoice
@@ -467,7 +512,8 @@ def cash_on_delivery(request):
     
     # Check if the total amount exceeds Rs. 1000
     if total_amount > 1000:
-        return HttpResponseBadRequest("COD not allowed for orders above Rs. 1000")
+        messages.error(request, "COD not allowed for orders above Rs. 1000")
+        return redirect('checkout')
     
     
     cart_items = CartItem.objects.filter(cart=cart)
@@ -532,7 +578,7 @@ def save_address(request):
         'addresses' : addresses,
     }
     
-    return render(request,'store/checkout.html',context)
+    return render(request,'store/nav_address.html',context)
 
 def delete_address(request, address_id):
     address = get_object_or_404(Addresses, pk=address_id, user=request.user)
@@ -647,6 +693,9 @@ def coupon(request):
                 order.coupon_count += 1
                 order.coupon_total += discount
                 order.save()
+
+
+            
             #else:
             #    messages.error(request, "No active order found for the user.")
             #    return redirect("checkout")
@@ -660,6 +709,9 @@ def coupon(request):
     
     
     #return render(request,'orders/payments.html',{'order_total': cart.order_total})
+
+
+
 
 
 def coupon_activate(request,total=0, quantity=0):

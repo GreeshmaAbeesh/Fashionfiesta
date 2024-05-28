@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+    <div class="container">
+    
+    <!-- ============================ COMPONENT 1 ================================= -->
+    
+   
+    <div class="row">
+        <aside class="col-lg-6">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title mb-4">Billing Address </h4>
+            <!-- Address form -->
+            <form id="billingAddressForm" method="POST">     <!--place_order defined in view of order-->
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">First Name</label>
+                        <input type="text" name="first_name" class="form-control" required>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Last Name</label>
+                        <input type="text" name="last_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Email</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Phone Number</label>
+                        <input type="text" name="phone" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Address Line 1</label>
+                        <input type="text" name="address_line_1" class="form-control" required>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">Address Line 2</label>
+                        <input type="text" name="address_line_2" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">City</label>
+                        <input type="text" name="city" class="form-control" required>
+                    </div>
+                    <div class="col form-group">
+                        <label for="">State</label>
+                        <input type="text" name="state" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col form-group">
+                        <label for="">Country</label>
+                        <input type="text" name="country" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="">Order Note</label>
+                    <textarea name="order_note" id="" cols="30" rows="5" class="form-control"></textarea>
+                </div>
+          
+                <!-- Submit button for saving the new address -->
+                <!--<a href ="{% url 'checkout' %}" type="submit" class="btn btn-primary btn-block mt-3">Save Address</a>-->
+            
+        </div>
+    </div> <!-- card.// -->
+    
+        </aside> <!-- col.// -->
+        <aside class="col-lg-6">
+    
+            <div class="card">
+            <div class="card-body">
+                <table class="table table-borderless table-shopping-cart">
+                    <thead class="text-muted">
+                    <tr class="small text-uppercase">
+                      <th scope="col">Product</th>
+                      <th scope="col" width="120">Quantity</th>
+                      <th scope="col" width="120">Price</th>
+                     
+                    </tr>
+                    </thead>
+                    <tbody>
+                
+                    {% for cart_item in cart_items %}
+                    <tr>
+                        <td>
+                            <figure class="itemside align-items-center">
+                                <div class="aside"><img src="{{ cart_item.product.images.url }}" class="img-sm"></div>   <!--get image in cart,this image taken from PopularProduct. product is the instance of popularproduct set in cart views-->
+                                <figcaption class="info">
+                                    <a href="{{ cart_item.product.get_url }}" class="title text-dark">{{ cart_item.product.product_name }}</a>   <!--get_url from storeitem- model-->
+                                    <p class="text-muted small">
+                                        {% if cart_item.variations.all %}
+                                            {% for item in cart_item.variations.all %}
+                                                {{item.variation_category | capfirst}} : {{item.variation_value | capfirst}}<br>    <!--this is for printing selected color and size in cart-->
+                                            {% endfor %}
+                                        {% endif %}
+                                    </p>
+                                </figcaption>
+                            </figure>
+                        </td>
+                        <td> 
+                            <!-- col.// -->
+                            <label for="">{{cart_item.quantity}}</label>
+                        </td>
+                        <td> 
+                            <div class="price-wrap"> 
+                                <var class="price">{{ cart_item.sub_total }}</var> 
+                                <small class="text-muted">₹ {{ cart_item.product.price }} </small>  <!--for printing single price-->
+                            </div> <!-- price-wrap .// -->
+                        </td>
+                       
+                    </tr>
+                    {% endfor %}
+                   
+                    </tbody>
+                </table>
+                
+                <!--<button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>-->
+                <div class="form-row">
+                    <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
+                    
+                </div>
+                </form>
+                <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+               
+            </form>
+
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const form = document.getElementById("billingAddressForm");
+                    const saveAddressBtn = document.getElementById("saveAddressBtn");
+                    const placeOrderBtn = document.getElementById("placeOrderBtn");
+            
+                    saveAddressBtn.addEventListener("click", function() {
+                        // Set action URL for saving address
+                        form.action = "{% url 'save_address' %}";
+                        form.submit();
+                    });
+            
+                    placeOrderBtn.addEventListener("click", function() {
+                        // Set action URL for placing order
+                        form.action = "{% url 'place_order' %}";
+                        form.submit();
+                    });
+
+                 });
+            </script>
+
+            <!-- Space for entering coupon code -->
+            <div class="mt-4">
+                <h5>Apply Coupon Code:</h5>
+                <form action="{% url 'coupon' %}" method="POST">
+                    {% csrf_token %}
+                    <div class="form-row">
+                        <div class="col form-group">
+                            <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code">
+                        </div>
+                        <div class="col form-group">
+                            <input type="hidden" name="order_id" value="{{ order.id }}">  <!-- Assuming you have an order object available in your template -->
+                            <button type="submit" class="btn btn-secondary">Apply</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="mt-4">
+                <h5>Saved Billing Addresses:</h5>
+                {% if addresses %}
+                <div class="row">
+                    {% for address in addresses %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">Address</h5>
+                                <p class="card-text"> {{address.first_name}}, {{address.last_name }}, {{ address.address_line_1 }}, {{ address.address_line_2 }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                
+                                <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>.</p>
+                {% endif %}
+            </div>
+
+
+            <!-- JavaScript code to handle address deletion -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const deleteButtons = document.querySelectorAll(".delete-address");
+        deleteButtons.forEach(function(button) {
+            button.addEventListener("click", function() {
+                const deleteUrl = button.getAttribute("data-delete-url");
+                fetch(deleteUrl, {
+                    method: "DELETE",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Remove the deleted address from the DOM
+                        button.closest(".card").parentNode.remove();
+                    } else {
+                        console.error("Failed to delete address");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    });
+</script>
+
+            <!-- Section for displaying saved billing addresses -->
+        <!--<div class="mt-4">
+                <h5>Saved Billing Addresses:</h5>
+                {% if addresses %}
+                    <ul>
+                        {% for address in addresses %}
+                            <li>
+                                {{address.first_name}},{{address.last_name }},{{ address.address_line_1 }},{{ address.address_line_2 }},{{ address.city }}, {{ address.state }}, {{ address.country }}
+                                
+                            <!- Add buttons or links for editing or deleting each address ->
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No saved addresses found.</p>
+                {% endif %}
+            </div>-->
+
+
+            </div> <!-- card-body.// -->
+            </div> <!-- card.// -->
+           
+    
+    </aside> <!-- col.// -->
+    
+    
+    </div> <!-- row.// -->
+   
+    <!-- ============================ COMPONENT 1 END .// ================================= -->
+    
+    </div> <!-- container .//  -->
+    </section>
+    <!-- ========================= SECTION CONTENT END// ========================= -->
+
+{% endblock %}

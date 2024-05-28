@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        /* Define your CSS styles here */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .invoice {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .invoice-body {
+            margin-bottom: 20px;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        .invoice-total {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="invoice-header">
+            <h1>Invoice</h1>
+        </div>
+                                <!-- col-lg-6 end here -->
+                                <div class="col-lg-6">
+                                    <!-- col-lg-6 start here -->
+                                    <div class="invoice-from">
+                                        <ul class="list-unstyled text-right">
+                                            <li><strong>Invoiced To</strong></li>
+                                            <li>{{order.full_name}}</li>
+                                            <li>{{order.full_address}}</li>
+                                            <li>{{order.city}},{{order.state}}</li>
+                                            <li>{{order.country}}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- col-lg-6 end here -->
+                                <div class="col-lg-12">
+                                    <!-- col-lg-12 start here -->
+                                    <div class="invoice-details mt25">
+                                        <div class="well">
+                                            <ul class="list-unstyled mb0">
+                                                <li><strong>Order Date:</strong>{{order.created_at}}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                   
+                                    <div class="invoice-items">
+                                        <div class="table-responsive" style="overflow: hidden; outline: none;" tabindex="0">
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                    <tr>
+                                                        <th class="per70 text-center">Products</th>
+                                                        <th class="per5 text-center">Qty</th>
+                                                        <th class="per25 text-center">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in ordered_products %}
+                                                    <tr>
+                                                        <td>{{item.product.product_name}}
+                                                            <p class="text-muted small">
+                                                                {% if item.variations.all %}
+                                                                    {% for i in item.variations.all %}
+                                                                        {{i.variation_category | capfirst}} : {{i.variation_value | capfirst}}<br>    <!--this is for printing selected color and size in cart-->
+                                                                    {% endfor %}
+                                                                {% endif %}
+                                                            </p>  
+                                                        </td>
+                                                        <td class="text-center">{{item.quantity}}</td>
+                                                        <td class="text-center">{{item.product_price}}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="2" class="text-right">Sub Total:</th>
+                                                        <th class="text-center">${{subtotal}}</th>
+                                                    </tr>
+                                                    <tr>
+                                                        <th colspan="2" class="text-right">Tax:</th>
+                                                        <th class="text-center">${{order.tax}}</th>
+                                                    </tr>
+                                                    
+                                                    <tr>
+                                                        <th colspan="2" class="text-right">Grand Total:</th>
+                                                        <th class="text-center">${{order.order_total}}</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="invoice-footer mt25">
+                                        <p class="text-center">Thank you for shopping with us!</p>
+                                    </div>
+        
+        
+                                </div>
+                                <!-- col-lg-12 end here -->
+    </div>
+</body>
+</html>

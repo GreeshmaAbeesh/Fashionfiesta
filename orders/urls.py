@@ -19,6 +19,7 @@ urlpatterns = [
     path('sales_report/', views.sales_report, name='sales_report'),
     #path('sales_report/', SalesReportAdminView.as_view(), name='sales_report'),
     #path('order_complete_pdf/',views.order_complete_pdf,name='order_complete_pdf'),
+    path('generate-pdf/', views.generate_pdf, name='generate_pdf'),
     
 ]
    

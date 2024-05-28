@@ -10,6 +10,7 @@
           <article class="card-body">
             {% include 'includes/alert.html' %}
             <header class="mb-4"><h4 class="card-title">Sign up</h4></header>
+           
             <form action="{% url 'register' %}" method="POST">
                 {% csrf_token %}
 
@@ -54,6 +55,7 @@
                 {{ form.non_field_errors }}    
                         
                 </form>
+
             </article><!-- card-body.// -->
         </div> <!-- card .// -->
         <p class="text-center mt-4">Have an account? <a href="{% url 'login' %}">Log In</a></p>

@@ -139,22 +139,11 @@ class Coupon(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+    
     def __str__(self):
         return self.code
     
     
-class CouponStats(models.Model):
-    code = models.OneToOneField(Coupon, on_delete=models.CASCADE, primary_key=True)
-    coupon_count = models.PositiveIntegerField(default=0)
-    total_discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    def __str__(self):
-        return self.code.code
-
-    def update_stats(self):
-        self.coupon_count = Coupon.objects.filter(code=self.code, active=True).count()
-        self.total_discount_amount = Coupon.objects.filter(code=self.code, active=True).aggregate(total_discount=Sum('discount'))['total_discount']
-        self.save()
 
 
 
