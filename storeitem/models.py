@@ -2,6 +2,7 @@ from django.db import models
 from category.models import Category
 from django.urls import reverse
 from accounts .models import Account
+from django.utils import timezone
 
 # Create your models here.
 class PopularProduct(models.Model):
@@ -23,6 +24,20 @@ class PopularProduct(models.Model):
 
     def __str__(self):
         return self.product_name
+    
+    def get_offer(self):
+        current_date = timezone.now()
+        active_offers = self.productoffer_set.filter(is_active=True, start_date__lte=current_date, end_date__gte=current_date)
+        if active_offers.exists():
+            return active_offers.first()
+        return None
+
+    def get_price_after_offer(self):
+        offer = self.get_offer()
+        if offer:
+            discount_amount = self.price * (offer.discount_percentage / 100)
+            return self.price - discount_amount
+        return self.price
 
 
 class VariationManager(models.Manager):
@@ -67,6 +82,22 @@ class ProductGallery(models.Model):
     class Meta:
         verbose_name = 'productgallery'
         verbose_name_plural = 'product gallery'
+
+
+class ProductOffer(models.Model):
+    product = models.ForeignKey(PopularProduct, on_delete=models.CASCADE)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    start_date = models.DateTimeField(default=timezone.now)
+    end_date = models.DateTimeField()
+
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.product.product_name} - {self.discount_percentage}% off"
+
+    def is_valid(self):
+        now = timezone.now()
+        return self.start_date <= now <= self.end_date
     
 
 class ReviewRating(models.Model):

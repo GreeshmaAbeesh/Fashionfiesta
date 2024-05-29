@@ -36,6 +36,18 @@
         </div> 
         
         <p>{{ single_product.description }}</p>
+
+    
+    <!-- Display product offer details -->
+    {% if product_offer %}
+        <div class="product-offer">
+            <h5>Special Offer</h5>
+            <p>Discount: {{ product_offer.discount_percentage }}%</p>
+            <p>Start Date: {{ product_offer.start_date }}</p>
+            <p>End Date: {{ product_offer.end_date }}</p>
+        </div>
+    {% endif %}
+
     
     <!--make working variants of color and size-->
     

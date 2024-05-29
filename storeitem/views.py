@@ -17,44 +17,50 @@ def store(request, category_slug=None):
     products = None
     
     if category_slug != None:
-        categories = get_object_or_404(Category,slug=category_slug)   # if category found, it bring objects otherwise return 404 error(inside it pass category model name & slug inside that model)
-        products  = PopularProduct.objects.filter(category=categories,is_available=True)
-        paginator = Paginator(products,3)      # from category wise product, 3 products stored in paginator
-        page = request.GET.get('page')    # this step is to get the page which we want
+        categories = get_object_or_404(Category, slug=category_slug)
+        products = PopularProduct.objects.filter(category=categories, is_available=True)
+        paginator = Paginator(products, 3)
+        page = request.GET.get('page')
         page_products = paginator.get_page(page)
         product_count = products.count()
     else:
-        products = PopularProduct.objects.all().filter(is_available=True).order_by('id') # here we get full products in the order of id
-        paginator = Paginator(products,6)      # from all products 6 products stored in paginator
-        page = request.GET.get('page')    # this step is to get the page which we want
-        page_products = paginator.get_page(page)  #6 products in paginator stored in page_products.. and this page_products passed inside the template
+        products = PopularProduct.objects.all().filter(is_available=True).order_by('id')
+        paginator = Paginator(products, 6)
+        page = request.GET.get('page')
+        page_products = paginator.get_page(page)
         product_count = products.count()
 
+    # Iterate through the products and get the active offer for each
+    for product in page_products:
+        product.offer = product.productoffer_set.filter(is_active=True).first()
+
     context = {
-        'products' : page_products,
-        'product_count' : product_count,
+        'products': page_products,
+        'product_count': product_count,
     }
-    return render(request, 'store/store.html',context)
+    return render(request, 'store/store.html', context)
 
 
 
-def product_detail(request,category_slug,product_slug):
+
+def product_detail(request, category_slug, product_slug):
     try:
-        single_product = PopularProduct.objects.get(category__slug=category_slug,slug=product_slug)  # __ is the syntax for accessing slug of category.ie from PopularProduct model we get category, iside the category app we have category we have slug model .to access that we using category__slug
-        in_wish = CartItem.objects.filter(cart__cart_id = _cart_id(request),product=single_product).exists()    # using this from cart item we access cart and using foreign key access cart id & _cart_id(request)  is the private function created to store session id.if this query has any object it returns exists().Then it shows true(product exist in cart) and does nt show any add to cart button
-        
+        single_product = PopularProduct.objects.get(category__slug=category_slug, slug=product_slug)
+        in_wish = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists()
+        product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
+
+        # Get the active offer for the product, if any
+        product_offer = single_product.productoffer_set.filter(is_active=True).first()
+
+        context = {
+            'single_product': single_product,
+            'in_wish': in_wish,
+            'product_gallery': product_gallery,
+            'product_offer': product_offer,  # Include the product offer in the context
+        }
+        return render(request, 'store/product_detail.html', context)
     except Exception as e:
         raise e
-    
-    #Get the product gallery
-    product_gallery = ProductGallery.objects.filter(product_id=single_product.id)
-
-    context = {
-        'single_product' : single_product,
-        'in_wish'    :  in_wish,
-        'product_gallery' : product_gallery,
-    }
-    return render(request,'store/product_detail.html',context)
 
 
 

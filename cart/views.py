@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from storeitem.models import PopularProduct,Variation
+from storeitem.models import PopularProduct,Variation,ProductOffer
 from orders.models import Wallet,OrderProduct
 from category.models import Category
 from .models import Cart,CartItem
@@ -154,7 +154,15 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         cart_items = CartItem.objects.filter(cart=cart,is_active=True).order_by(F('product__price').asc()) 
         
         for cart_item in cart_items:
-            total += (cart_item.product.price * cart_item.quantity)
+            # Apply product offer if available
+            product = cart_item.product
+            offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+            if offer:
+                total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
+                product.price = product.price-(product.price*(offer.discount_percentage / 100))
+            else:
+                total += (product.price * cart_item.quantity)
+                #total += (cart_item.product.price * cart_item.quantity)
             quantity += cart_item.quantity
         tax = (2 * total)/100
         grand_total = total + tax
@@ -182,7 +190,15 @@ def checkout(request,total=0, quantity=0, cart_items=None):
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart,is_active=True)
         for cart_item in cart_items:
-            total += (cart_item.product.price * cart_item.quantity)
+            # Apply product offer if available
+            product = cart_item.product
+            offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+            if offer:
+                total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
+                product.price = product.price-(product.price*(offer.discount_percentage / 100))
+            else:
+                total += (product.price * cart_item.quantity)
+                #total += (cart_item.product.price * cart_item.quantity)
             quantity += cart_item.quantity
         tax = (2 * total)/100
         grand_total = total + tax

@@ -3,7 +3,7 @@ from django.http import HttpResponse,JsonResponse
 from cart .models import CartItem,Cart
 from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
 from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew,Coupon
-from storeitem .models import PopularProduct
+from storeitem .models import PopularProduct,ProductOffer
 import datetime
 import json
 from django.template.loader import render_to_string
@@ -210,10 +210,18 @@ def place_order(request, total=0, quantity=0):
     
 
     
-    grand_total =0
-    tax = 0
+    grand_total = Decimal('0')
+    tax = Decimal('0')
     for cart_item in cart_items:
-        total += (cart_item.product.price * cart_item.quantity)
+        # Apply product offer if available
+        product = cart_item.product
+        offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+        if offer:
+            total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
+            product.price = product.price-(product.price*(offer.discount_percentage / 100))
+        else:
+            total += (product.price * cart_item.quantity)
+            #total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
     print('quantity',quantity)
 
@@ -236,7 +244,7 @@ def place_order(request, total=0, quantity=0):
         wallet = Wallet.objects.create(user=request.user)
 
     # Check if there is any deduction in the wallet
-    wallet_deduction = wallet.deduction if wallet else 0
+    wallet_deduction = wallet.deduction if wallet else Decimal('0')
     print('deducted amount',wallet_deduction)
 
 
@@ -253,8 +261,8 @@ def place_order(request, total=0, quantity=0):
 
     # Calculate the grand total after applying the discount
     grand_total = total
-    tax = (2 * total)/100
-    grand_total = float(grand_total) + tax - float(wallet_deduction)
+    tax = (Decimal('2') * total) / Decimal('100')
+    grand_total += tax - wallet_deduction
     #print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
     #print('request.method=',request.method)
 
@@ -660,7 +668,7 @@ def coupon(request):
 
             # Ensure the coupon discount does not exceed the order total
             discount = min(coupon.discount, order_total)
-            print('discount value', discount)
+            print('MIN discount value', discount)
 
 
              # Update coupon count and total discount amount
@@ -736,11 +744,19 @@ def coupon_activate(request,total=0, quantity=0):
         return redirect('store')
     
     
-    grand_total =0
-    tax = 0
+    grand_total = Decimal('0')
+    tax = Decimal('0')
     
     for cart_item in cart_items:
-        total += (cart_item.product.price * cart_item.quantity)
+        # Apply product offer if available
+        product = cart_item.product
+        offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+        if offer:
+            total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
+            product.price = product.price-(product.price*(offer.discount_percentage / 100))
+        else:
+            total += (product.price * cart_item.quantity)
+            #total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
     print('quantity',quantity)
 
@@ -757,8 +773,8 @@ def coupon_activate(request,total=0, quantity=0):
 
     # Calculate the grand total after applying the discount
     grand_total = total - discount
-    tax = (2 * total)/100
-    grand_total = float(grand_total) + tax 
+    tax = (Decimal('2') * total) / Decimal('100')
+    grand_total += tax
     print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
     print('request.method=',request.method)
 
@@ -1211,5 +1227,3 @@ def sales_report(request):
     }
     
     return render(request, 'sales_report.html', context)
-
-
