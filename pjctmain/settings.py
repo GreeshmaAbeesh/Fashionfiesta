@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     #'allauth.socialaccount.providers.facebook',
     'customadmin',
     'orders',
-    'coupons',
+    #'coupons',
     'wishlist',
     'easy_pdf',
     

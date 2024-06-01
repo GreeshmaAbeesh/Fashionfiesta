@@ -70,9 +70,8 @@
                                 <label for="">{{cart_item.quantity}}</label>
                             </td>
                             <td> 
-                                <div class="price-wrap"> 
-                                    <var class="price">{{ cart_item.sub_total }}</var> 
-                                    <small class="text-muted">₹ {{ cart_item.product.price }} </small>  <!--for printing single price-->
+                                <div class="price-wrap">
+                                    <var class="price">₹ {{ cart_item.sub_total }}</var>
                                 </div> <!-- price-wrap .// -->
                             </td>
                            
@@ -86,7 +85,11 @@
               
         </aside> <!-- col.// -->
         <aside class="col-lg-4">
-    
+            {% if savings > 0 %}
+            <div class="savings" style="color: green; font-weight: bold;">
+                You saved ₹ {{ savings }} rupees in this purchase.
+            </div>
+            {% endif %}
             <div class="card">
             <div class="card-body">
                 <dl class="dlist-align">
@@ -97,10 +100,14 @@
                   <dt>Tax:</dt>
                   <dd class="text-right">₹ {{tax}} </dd>
                 </dl>
+                {% if coupon %}
+                
                 <dl class="dlist-align">
-                    <dt>Discount:</dt>
-                    <dd class="text-right">₹ {{discount}} </dd>
-                  </dl>
+                  <dt>Discount:</dt>
+                  <dd class="text-right">₹ {{ discount }}</dd>
+                </dl>
+               
+                {% endif %}
                   <dl class="dlist-align">
                     <dt>Wallet:</dt>
                     <dd class="text-right">₹ {{wallet_deduction}} </dd>

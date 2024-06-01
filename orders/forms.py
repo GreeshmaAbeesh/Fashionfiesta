@@ -1,7 +1,6 @@
 from django import forms
 from .models import Order
 from .models import Addresses
-from .models import Coupon
 from .models import BillingAddress
 
 
@@ -18,10 +17,6 @@ class AddressesForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'email', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country']
 
 
-class CouponForm(forms.ModelForm):
-    class Meta:
-        model = Coupon
-        fields = ['first_name', 'last_name', 'email', 'phone', 'address_line_1', 'address_line_2', 'city', 'state', 'country','discount','code','active','order']
 
 
 
@@ -36,3 +31,7 @@ class BillingAddressForm(forms.ModelForm):
 
 class WalletDeductionForm(forms.Form):
     deduction_amount = forms.DecimalField(label='Deduction Amount', min_value=0.01, max_digits=10, decimal_places=2, required=True)
+
+
+
+    

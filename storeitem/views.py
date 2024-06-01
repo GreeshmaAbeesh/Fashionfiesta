@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404,redirect
-from .models import PopularProduct,ProductGallery,ReviewRating
+from .models import PopularProduct,ProductGallery,ReviewRating,Variation
 from category.models import Category
 import os
 from cart.views import _cart_id
@@ -51,13 +51,22 @@ def product_detail(request, category_slug, product_slug):
 
         # Get the active offer for the product, if any
         product_offer = single_product.productoffer_set.filter(is_active=True).first()
+       
+        
+
+        # Get color variations and their images for the product
+        color_variations = Variation.objects.filter(product=single_product, variation_category='color', is_active=True).exclude(variation_image='')
+        color_images = {variation.variation_value.lower(): variation.variation_image.url for variation in color_variations if variation.variation_image}
+        print('color_variations, color_images', color_variations, color_images)
 
         context = {
             'single_product': single_product,
             'in_wish': in_wish,
             'product_gallery': product_gallery,
             'product_offer': product_offer,  # Include the product offer in the context
+            'color_images': color_images,  # Pass color variation images to the template
         }
+
         return render(request, 'store/product_detail.html', context)
     except Exception as e:
         raise e

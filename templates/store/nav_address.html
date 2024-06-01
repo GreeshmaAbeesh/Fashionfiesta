@@ -156,22 +156,7 @@
                  });
             </script>
 
-            <!-- Space for entering coupon code -->
-            <div class="mt-4">
-                <h5>Apply Coupon Code:</h5>
-                <form action="{% url 'coupon' %}" method="POST">
-                    {% csrf_token %}
-                    <div class="form-row">
-                        <div class="col form-group">
-                            <input type="text" name="coupon_code" class="form-control" placeholder="Enter coupon code">
-                        </div>
-                        <div class="col form-group">
-                            <input type="hidden" name="order_id" value="{{ order.id }}">  <!-- Assuming you have an order object available in your template -->
-                            <button type="submit" class="btn btn-secondary">Apply</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+           
             
             <div class="mt-4">
                 <h5>Saved Billing Addresses:</h5>

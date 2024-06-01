@@ -57,8 +57,11 @@
                 <h6>Choose Color</h6>
                     <select name="color" class="form-control" required>     <!--form control is to make it as bootstrap and here chosen color  pass to the add_cart functionality-->
                         <option value="" disabled selected>SELECT</option>
-                        {% for i in single_product.variation_set.colors %}   <!--variation_set.all means it will bring all the data from variation model-->
-                            <option value="{{i.variation_value | lower}}">{{i.variation_value | capfirst}}</option>
+                        {% for variation in single_product.variation_set.all %}
+                            {% if variation.variation_category == 'color' %}
+                                <option value="{{ variation.variation_value | lower }}">{{ variation.variation_value }}</option>
+                                print("variation with photo from the database",variation.variation_value)
+                            {% endif %}
                         {% endfor %}
                     </select>
             </div>

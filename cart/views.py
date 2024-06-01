@@ -2,14 +2,14 @@ from django.shortcuts import render,redirect,get_object_or_404
 from storeitem.models import PopularProduct,Variation,ProductOffer
 from orders.models import Wallet,OrderProduct
 from category.models import Category
-from .models import Cart,CartItem
+from .models import Cart,CartItem,Coupon
 from django.http import HttpResponse
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import F
 from django.db.models import Count
-
+from .forms import CouponApplyForm
 from django.utils import timezone
 #from .models import ProductOffer
 # Create your views here.
@@ -150,22 +150,61 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
     try:
         tax = 0
         grand_total = 0
+        discount = 0  # Initialize discount here
+        coupon = None  # Initialize coupon here
+        original_total = 0  # Initialize original_total
+        offer = 0  # Initialize offer here
+
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart,is_active=True).order_by(F('product__price').asc()) 
         
+         # Check if there is an active coupon in the session
+        coupon_id = request.session.get('coupon_id')
+        if coupon_id:
+            try:
+                coupon = Coupon.objects.get(id=coupon_id)
+            except Coupon.DoesNotExist:
+                coupon = None
+
+        
+
         for cart_item in cart_items:
             # Apply product offer if available
             product = cart_item.product
             offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+            
+
+            #offer_id = request.session.get('productoffer_id')
+            #if offer_id:
+                # try:
+                #     offer_flag = ProductOffer.objects.get(id=offer_id)
+                # except ProductOffer.DoesNotExist:
+                #     offer_flag = None
+            print('offer value',offer)
             if offer:
+                cart_item.original_price = product.price  # Save the original price
                 total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
-                product.price = product.price-(product.price*(offer.discount_percentage / 100))
+                product.price = product.price - (product.price * (offer.discount_percentage / 100))
+                original_total += cart_item.original_price * cart_item.quantity  # Add to original total
             else:
                 total += (product.price * cart_item.quantity)
+                cart_item.original_price = product.price  # Save the original price
+                original_total += cart_item.original_price * cart_item.quantity  # Add to original total
                 #total += (cart_item.product.price * cart_item.quantity)
+            cart_item.original_price = cart_item.original_price * cart_item.quantity
             quantity += cart_item.quantity
+            
+
+        if coupon:
+            discount = (coupon.discount / 100) * total
+            total -= discount
+
+
         tax = (2 * total)/100
         grand_total = total + tax
+        savings = original_total - grand_total  # Calculate the total savings
+
+
     except ObjectDoesNotExist:
         pass 
 
@@ -175,7 +214,14 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         'cart_items' : cart_items,
         'tax' : tax ,
         'grand_total' : grand_total,
+        'coupon': coupon,
+        'discount': discount,
+        'offer_id': offer,
+        'savings': savings, 
+       
     }
+
+    
     return render(request,'store/cart.html',context)   
 
 
@@ -187,21 +233,47 @@ def checkout(request,total=0, quantity=0, cart_items=None):
     try:
         tax = 0
         grand_total = 0
+        discount = 0  # Initialize discount here
+        coupon = None  # Initialize coupon here
+        original_total = 0  # Initialize original_total
+
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart,is_active=True)
+
+         # Check if there is an active coupon in the session
+        coupon_id = request.session.get('coupon_id')
+        if coupon_id:
+            try:
+                coupon = Coupon.objects.get(id=coupon_id)
+            except Coupon.DoesNotExist:
+                coupon = None
+
+
         for cart_item in cart_items:
             # Apply product offer if available
             product = cart_item.product
             offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
             if offer:
+                cart_item.original_price = product.price  # Save the original price
                 total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
-                product.price = product.price-(product.price*(offer.discount_percentage / 100))
+                product.price = product.price - (product.price * (offer.discount_percentage / 100))
+                original_total += cart_item.original_price * cart_item.quantity  # Add to original total
             else:
                 total += (product.price * cart_item.quantity)
+                cart_item.original_price = product.price  # Save the original price
+                original_total += cart_item.original_price * cart_item.quantity  # Add to original total
                 #total += (cart_item.product.price * cart_item.quantity)
             quantity += cart_item.quantity
+
+        if coupon:
+            discount = (coupon.discount / 100) * total
+            total -= discount
+
+
         tax = (2 * total)/100
         grand_total = total + tax
+        savings = original_total - grand_total  # Calculate the total savings
+
     except ObjectDoesNotExist:
         pass 
 
@@ -212,6 +284,9 @@ def checkout(request,total=0, quantity=0, cart_items=None):
         'tax' : tax ,
         'grand_total' : grand_total,
         #'wallet' : wallet,
+        'coupon': coupon,
+        'discount': discount,
+        'savings': savings, 
     }
     return render(request,'store/checkout.html',context)
 
@@ -233,3 +308,38 @@ def get_best_selling_categories():
     return Category.objects.filter(id__in=category_ids)
 
 '''
+
+def apply_coupon(request):
+    now = timezone.now()
+    form = CouponApplyForm(request.POST or None)
+    
+    if form.is_valid():
+        code = form.cleaned_data['code']
+       
+        
+        # Check if the coupon exists
+        coupon = Coupon.objects.filter(code=code, active=True, valid_from__lte=now, valid_to__gte=now).first()
+        print('coupon is',coupon)
+
+        if coupon:
+            try:
+                coupon = Coupon.objects.get(code=code, active=True, valid_from__lte=now, valid_to__gte=now)
+                print('coupon from adminside',coupon)
+                print('coupon.id',coupon.id)
+                request.session['coupon_id'] = coupon.id
+                return redirect('cart')
+            except Coupon.DoesNotExist:
+                form.add_error('code', 'This coupon does not exist or is not valid.')
+    
+    if request.method == 'POST' and 'remove_coupon' in request.POST:
+        if 'coupon_id' in request.session:
+            del request.session['coupon_id']
+        return redirect('cart')
+    return render(request, 'apply_coupon.html', {'form': form})
+
+
+
+def remove_coupon(request):
+    if 'coupon_id' in request.session:
+        del request.session['coupon_id']
+    return redirect('cart')

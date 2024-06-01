@@ -70,11 +70,16 @@
                         </div> <!-- col.// -->
         </td>
         <td> 
-            <div class="price-wrap"> 
-                <var class="price">{{ cart_item.sub_total }}</var> 
-                <small class="text-muted">₹ {{ cart_item.product.price }} </small>  <!--for printing single price-->
-            </div> <!-- price-wrap .// -->
+            <div class="price-wrap">
+                {% if offer_id  %}
+                    <var class="price"><s>₹ {{ cart_item.original_price }} </s><br>₹ {{ cart_item.sub_total }}</var>
+                {% else %}
+                    <var class="price">₹ {{ cart_item.sub_total }}</var>
+                {% endif %}
+                <!--<small class="text-muted">₹ {{ cart_item.product.price }}</small>-->
+            </div>
         </td>
+        
         <td class="text-right"> 
         <a href="{% url 'remove_cart_item' cart_item.product.id  cart_item.id %}" onclick="return confirm('Are you sure you want to deletethis item')" class="btn btn-danger"> Remove</a>
         </td>
@@ -87,9 +92,16 @@
     
         </aside> <!-- col.// -->
         <aside class="col-lg-3">
-    
+            <!-- Add this part to display the total savings -->
+            {% if savings > 0 %}
+                <div class="savings" style="color: green; font-weight: bold;">
+                    You saved ₹ {{ savings }} rupees in this purchase.
+                </div>
+            {% endif %}
             <div class="card">
             <div class="card-body">
+               
+                
                 <dl class="dlist-align">
                   <dt>Total price:</dt>
                   <dd class="text-right">₹ {{total}}</dd>
@@ -98,17 +110,41 @@
                   <dt>Tax:</dt>
                   <dd class="text-right">₹ {{tax}} </dd>
                 </dl>
+                {% if coupon %}
+                <dl class="dlist-align">
+                  <dt>Coupon:</dt>
+                  <dd class="text-right">{{ coupon.code }} - {{ coupon.discount }}% off</dd>
+                </dl>
+                <dl class="dlist-align">
+                  <dt>Discount:</dt>
+                  <dd class="text-right">-₹ {{ discount }}</dd>
+                </dl>
+               
+                {% endif %}
                 <dl class="dlist-align">
                   <dt>Grand_Total:</dt>
                   <dd class="text-right text-dark b"><strong>₹ {{grand_total}}</strong></dd>
                 </dl>
+                <hr>
+                <form action="{% url 'apply_coupon' %}" method="post">
+                    {% csrf_token %}
+                    <input type="text" name="code" placeholder="Enter coupon code" class="form-control mb-2">
+                    <button type="submit" class="btn btn-outline-primary btn-block">Apply Coupon</button>
+                </form>
+                <a href="{% url 'remove_coupon' %}" class="btn btn-danger btn-block">Remove Coupon</a>
                 <hr>
                 <p class="text-center mb-3">
                     <img src="{% static './images/misc/payments.png' %}" height="26">
                 </p>
                 <a href="{% url 'checkout' %}" class="btn btn-primary btn-block"> Checkout </a>
                 <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
-                
+                <div class="mt-4">
+                    <h5>Available Coupons:</h5>
+                    <ul>
+                        <li><a href="#" class="apply-coupon" data-coupon="CODE123">CODE123 - 30 off</a></li>
+                        
+                    </ul>
+                </div>
             </div> <!-- card-body.// -->
             </div> <!-- card.// -->
     

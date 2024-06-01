@@ -1,7 +1,7 @@
 from django.db import models
 from storeitem .models import PopularProduct,Variation
 from accounts .models import Account
-from coupons .models import Coupon
+#from coupons .models import Coupon
 from django.utils import timezone
 
 # Create your models here.
@@ -9,7 +9,7 @@ from django.utils import timezone
 class Cart(models.Model):
     cart_id    = models.CharField(max_length=250,blank=True)
     date_added = models.DateField(auto_now_add=True)
-    coupons = models.ManyToManyField(Coupon, blank=True)
+    #coupons = models.ManyToManyField(Coupon, blank=True)
 
     def __str__(self):
         return self.cart_id
@@ -46,3 +46,19 @@ class ProductOffer(models.Model):
     def __str__(self):
         return f"{self.product.product_name} - {self.discount_percentage}%"
 '''
+
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    discount = models.DecimalField(max_digits=5, decimal_places=2)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.code
+
+    def is_valid(self):
+        now = timezone.now()
+        return self.active and self.valid_from <= now <= self.valid_to
+

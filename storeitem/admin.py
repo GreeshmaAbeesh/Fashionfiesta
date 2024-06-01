@@ -24,7 +24,7 @@ class PopularProductAdmin(admin.ModelAdmin):
 
 
 class VariationAdmin(admin.ModelAdmin):
-    list_display = ('product','variation_category','variation_value','is_active')
+    list_display = ('product','variation_category','variation_value','variation_image','is_active')
     list_editable = ('is_active',)  # is active is editable in admin page andit must be a list or tuple
     list_filter = ('product','variation_category','variation_value')
     

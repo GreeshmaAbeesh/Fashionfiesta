@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest,Coupon,SalesReportNew
+from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest,SalesReportNew
 from django.db.models import Sum
 from django.views import View
 from django.http import HttpResponse
@@ -76,9 +76,10 @@ class SalesReportAdminView(View):
 '''
 
 class SalesReportNewAdmin(admin.ModelAdmin):
-    list_display = ['start_date', 'end_date', 'date_range', 'overall_sales_count', 'total_sales_amount', 'total_discount', 'total_coupon_count']
+    list_display = ['start_date', 'end_date', 'date_range', 'overall_sales_count', 'total_sales_amount', 'total_discount']
     
-   
+
+
 
 
 admin.site.register(Payment)
@@ -86,7 +87,7 @@ admin.site.register(Order,OrderAdmin)
 admin.site.register(OrderProduct)
 admin.site.register(Addresses)
 admin.site.register(Wallet,WalletAdmin)
-admin.site.register(Coupon,CouponAdmin)
+
 admin.site.register(ReturnRequest,ReturnRequestAdmin)
 admin.site.register(SalesReportNew,SalesReportNewAdmin)
 

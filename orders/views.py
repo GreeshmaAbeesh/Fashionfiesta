@@ -1,8 +1,8 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse,JsonResponse
-from cart .models import CartItem,Cart
-from .forms import OrderForm,AddressesForm,CouponForm,ReturnRequestForm,WalletDeductionForm
-from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew,Coupon
+from cart .models import CartItem,Cart,Coupon
+from .forms import OrderForm,AddressesForm,ReturnRequestForm,WalletDeductionForm
+from .models import Order,OrderProduct,Payment,Addresses,Wallet,SalesReportNew
 from storeitem .models import PopularProduct,ProductOffer
 import datetime
 import json
@@ -11,7 +11,7 @@ from django.core.mail import EmailMessage
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from decimal import Decimal
-from coupons.models import Coupon
+#from coupons.models import Coupon
 from django.core.exceptions import ObjectDoesNotExist
 from .models import ReturnRequest,BillingAddress
 from django.db.models import Sum
@@ -36,6 +36,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from django.utils import timezone
 
 
 
@@ -212,29 +213,41 @@ def place_order(request, total=0, quantity=0):
     
     grand_total = Decimal('0')
     tax = Decimal('0')
+    discount = Decimal('0')
+    coupon = None
+    original_total = Decimal('0') # Initialize original_total
+
+    # Check if there is an active coupon in the session
+    coupon_id = request.session.get('coupon_id')
+    if coupon_id:
+        try:
+            coupon = Coupon.objects.get(id=coupon_id)
+        except Coupon.DoesNotExist:
+            coupon = None
+
+
     for cart_item in cart_items:
         # Apply product offer if available
         product = cart_item.product
         offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
         if offer:
+            cart_item.original_price = product.price  # Save the original price
             total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
-            product.price = product.price-(product.price*(offer.discount_percentage / 100))
+            product.price = product.price - (product.price * (offer.discount_percentage / 100))
+            original_total += cart_item.original_price * cart_item.quantity  # Add to original total
         else:
             total += (product.price * cart_item.quantity)
+            cart_item.original_price = product.price  # Save the original price
+            original_total += cart_item.original_price * cart_item.quantity  # Add to original total
             #total += (cart_item.product.price * cart_item.quantity)
         quantity += cart_item.quantity
     print('quantity',quantity)
 
-    
-    #coupons = Coupon.objects.all()
-    #print('couponcode',coupons)
-    #Fetch the coupon applied to the cart
-    #coupons = cart.coupons.first()
-    #print('coupon is :',coupons)
-    #If there's no coupon applied, discount is zero
-    #discount = coupons.discount if coupons else Decimal(0)
-    #print('discount is',discount)
+    if coupon:
+        discount = (coupon.discount / 100) * total
+        total -= discount
 
+   
     # Fetch the user's wallet
     try:
         wallet = Wallet.objects.get(user=request.user)
@@ -250,26 +263,24 @@ def place_order(request, total=0, quantity=0):
 
 
 
-    #wallet = Wallet.objects.get(user=request.user)
-    #if wallet.deduction != 0:
-    #    wallet_deduction = wallet.deduction
-    #else:
-    #    wallet_deduction = 0
-    #print('deducted amount',wallet_deduction)
-
-
 
     # Calculate the grand total after applying the discount
     grand_total = total
     tax = (Decimal('2') * total) / Decimal('100')
     grand_total += tax - wallet_deduction
-    #print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
+    savings = original_total - grand_total  # Calculate the total savings
+    print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
     #print('request.method=',request.method)
+
+    # Remove coupon ID from session
+    del request.session['coupon_id']
+
 
     if request.method == 'POST':
         form = OrderForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
-        #print('inside post',form)
+        print('inside post form')
         if form.is_valid():
+            print('inside form is valid')
             # store all the billing information inside order table
             data = Order()
             data.user = current_user
@@ -287,8 +298,9 @@ def place_order(request, total=0, quantity=0):
             data.tax = tax
             data.ip = request.META.get('REMOTE_ADDR')
             data.status = "Not_Completed"
+            print("data valid iside place order before data save")
             data.save()  #after save we got a data id
-            #print(data)
+            print("data valid iside place order",data)
             # generate order_id(ordernumber)
             yr = int(datetime.date.today().strftime('%Y'))
             dt = int(datetime.date.today().strftime('%d'))
@@ -315,12 +327,14 @@ def place_order(request, total=0, quantity=0):
                 'tax' : tax,
                 'grand_total' : grand_total,
                 'wallet_deduction' : wallet_deduction,
-                #'coupons' : coupons,
-                #'discount' : discount,
+                'coupon': coupon,
+                'discount': discount,
+                'savings': savings,
             }
             print('order number in place_order:',order_number)
             return render(request,'orders/payments.html',context)
         else:
+            print('else condition order number in place_order:')
             # If form is not valid, render the checkout page again with form errors
             return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
 
@@ -627,291 +641,194 @@ def address_list(request):
 
 
 
-def coupon(request):
-    #Coupon.activate_default_coupon()
-
+# def coupon(request):
    
-    if request.method == "POST":
-        code = request.POST.get("coupon_code")
-        print('entered code:',code)
+#     if request.method == "POST":
+#         code = request.POST.get("coupon_code")
+#         print('entered code:',code)
 
-        # Check if the coupon code is provided
-        if not code:
-            messages.error(request, "Please provide a coupon code.")
-            print("Please provide a coupon code.")
-            return redirect("checkout")  # Redirect back to checkout if no coupon code provided
+#         # Check if the coupon code is provided
+#         if not code:
+#             messages.error(request, "Please provide a coupon code.")
+#             print("Please provide a coupon code.")
+#             return redirect("checkout")  # Redirect back to checkout if no coupon code provided
 
-        # Retrieve the coupon from the database
-        coupon = Coupon.objects.filter(code=code, active=True).first()
-        print('coupon is :',coupon)
+#         # Retrieve the coupon from the database
+#         coupon = Coupon.objects.filter(code=code, active=True).first()
+#         print('coupon is :',coupon)
 
-        if not coupon:
-            messages.error(request, "Invalid coupon code.")
-            print('given value is not coupon')
-            return redirect("checkout")
+#         if not coupon:
+#             messages.error(request, "Invalid coupon code.")
+#             print('given value is not coupon')
+#             return redirect("checkout")
         
         
-        
-
-        # Check if the code is the default code
-        default_code = "CODE123"
-        if code == default_code:
-            messages.success(request, "Default coupon activated successfully.")
-            print('coupon activated successfully')
+#         # Check if the code is the default code
+#         default_code = "CODE123"
+#         if code == default_code:
+#             messages.success(request, "Default coupon activated successfully.")
+#             print('coupon activated successfully')
            
-            cart = Cart.objects.get(cart_id=_cart_id(request))
+#             cart = Cart.objects.get(cart_id=_cart_id(request))
 
-            # Calculate the order total based on the sum of subtotals of all cart items
-            cart_items = CartItem.objects.filter(cart=cart)
-            order_total = sum(item.sub_total() for item in cart_items)
-            print("total order",order_total)
+#             # Calculate the order total based on the sum of subtotals of all cart items
+#             cart_items = CartItem.objects.filter(cart=cart)
+#             order_total = sum(item.sub_total() for item in cart_items)
+#             print("total order",order_total)
 
-            # Ensure the coupon discount does not exceed the order total
-            discount = min(coupon.discount, order_total)
-            print('MIN discount value', discount)
-
-
-             # Update coupon count and total discount amount
-           # coupon_count = CouponStats.objects.filter(code=code).count()
-           # total_discount_amount = CouponStats.objects.filter(code=code).aggregate(total_discount=Sum('discount'))['total_discount']
-            
-             # Save coupon count and total discount amount into the database
-            #coupon_stats, created = CouponStats.objects.get_or_create(code=code)
-            #coupon_stats.coupon_count = coupon_count
-            #coupon_stats.total_discount_amount = total_discount_amount
-            #coupon_stats.save()
+#             # Ensure the coupon discount does not exceed the order total
+#             discount = min(coupon.discount, order_total)
+#             print('MIN discount value', discount)
 
 
+#             cart.order_total = order_total - discount  # Subtract the discount, not coupon.discount
+#             print('cart.order_total is', cart.order_total)
+#             cart.save()
 
+#             # Add the coupon to the order's coupons
+#             cart.coupons.add(coupon)
+#             print('coupon successfully applied')
+#             messages.success(request, "Coupon applied successfully.")
+#             currentuser = request.user
+#             orders = Order.objects.filter(user=currentuser, is_ordered=False)
 
-            cart.order_total = order_total - discount  # Subtract the discount, not coupon.discount
-            print('cart.order_total is', cart.order_total)
-            cart.save()
+#             if orders.exists():
+#                 # Assuming there's only one active order for a user at a time
+#                 order = orders.first()
+#                 order.coupon_count += 1
+#                 order.coupon_total += discount
+#                 order.save()
 
-            # Add the coupon to the order's coupons
-            cart.coupons.add(coupon)
-            print('coupon successfully applied')
-            messages.success(request, "Coupon applied successfully.")
-            currentuser = request.user
-            orders = Order.objects.filter(user=currentuser, is_ordered=False)
-
-            if orders.exists():
-                # Assuming there's only one active order for a user at a time
-                order = orders.first()
-                order.coupon_count += 1
-                order.coupon_total += discount
-                order.save()
-
-
-            
-            #else:
-            #    messages.error(request, "No active order found for the user.")
-            #    return redirect("checkout")
-            coupon.save()
+#             coupon.save()
     
-            return coupon_activate(request)
-    return redirect('checkout')            
+#             return coupon_activate(request)
+#     return redirect('checkout')            
 
-            # Redirect to place_order view with updated details
-            #return redirect(reverse('place_order', kwargs={'total': order_total, 'grand_total': grand_total}))
-    
-    
-    #return render(request,'orders/payments.html',{'order_total': cart.order_total})
-
-
-
-
-
-def coupon_activate(request,total=0, quantity=0):
-    current_user = request.user
-    print('current user inside place order',current_user)
-
-    # Get the cart associated with the current session
-    try:
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
-        # Redirect the user back to the store if the cart is empty or doesn't exist
-        return redirect('store')
-    # Fetch the selected address
-
-
-    #if cart count is less than or equal to 0, then redirect back to shop page
-    cart_items = CartItem.objects.filter(cart=cart,is_active=True)
-    print('cart_items = ',cart_items)
-    cart_count = cart_items.count()
-    print('cartcount = ',cart_count,cart_items)
-    if cart_count <= 0:
-        return redirect('store')
-    
-    
-    grand_total = Decimal('0')
-    tax = Decimal('0')
-    
-    for cart_item in cart_items:
-        # Apply product offer if available
-        product = cart_item.product
-        offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
-        if offer:
-            total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
-            product.price = product.price-(product.price*(offer.discount_percentage / 100))
-        else:
-            total += (product.price * cart_item.quantity)
-            #total += (cart_item.product.price * cart_item.quantity)
-        quantity += cart_item.quantity
-    print('quantity',quantity)
-
-    
-    #coupons = Coupon.objects.all()
-    #print('couponcode',coupons)
-    #Fetch the coupon applied to the cart
-    coupons = cart.coupons.first()
-    print('coupon is :',coupons)
-    #If there's no coupon applied, discount is zero
-    discount = coupons.discount if coupons else Decimal(0)
-    print('discount is',discount)
-
-
-    # Calculate the grand total after applying the discount
-    grand_total = total - discount
-    tax = (Decimal('2') * total) / Decimal('100')
-    grand_total += tax
-    print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
-    print('request.method=',request.method)
-
-    if request.method == 'POST':
-            form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
-            #print('inside post',form)
-            #if form.is_valid():
-            #print('form is valid')
-            # store all the billing information inside order table
-            data = Order()
-            data.user = current_user
-
-            data.order_total = grand_total
-            data.tax = tax
-            data.ip = request.META.get('REMOTE_ADDR')
-            data.save()  #after save we got a data id
-            #print(data)
-            # generate order_id(ordernumber)
-            # yr = int(datetime.date.today().strftime('%Y'))
-            # dt = int(datetime.date.today().strftime('%d'))
-            # mt = int(datetime.date.today().strftime('%m'))
-            # d = datetime.date(yr,mt,dt)
-            # current_date = d.strftime('%Y%m%d') #20240314
-            # print(current_date)
-            # order_number = current_date + str(data.id)
-            # data.order_number = order_number
-            # #data.order_id = str(data.id)
-            # print('data.order_number...',data.order_number)
-            yr = int(mydatetime.today().strftime('%Y'))
-            dt = int(mydatetime.today().strftime('%d'))
-            mt = int(mydatetime.today().strftime('%m'))
-            d = mydatetime(yr, mt, dt)
-            current_date = d.strftime('%Y%m%d')  # 20240314
-            print(current_date)
-            order_number = current_date + str(data.id)
-            data.order_number = order_number
-            data.order_id = str(data.id)
-            print('data.order_number...', data.order_number)
-            print('data.order_ID...',data.order_id)
-            #data.first_name = first_name
-            data.save()
-            print('data',data)
-
-            
-            
-            order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)  # true when payment is successful
-            #print('order is ',order)
-
-            # Fetch the last saved address for the current user
            
-            last_saved_address = Addresses.objects.filter(user=current_user).order_by('-id').first()
-            print('saved address is ....',last_saved_address)
-             # Assign the last saved address to the order
-            if last_saved_address:
-                order.first_name = last_saved_address.first_name
-                order.last_name = last_saved_address.last_name
-                order.phone = last_saved_address.phone
-                order.email = last_saved_address.email
-                order.address_line_1 = last_saved_address.address_line_1
-                order.address_line_2 = last_saved_address.address_line_2
-                order.country = last_saved_address.country
-                order.state = last_saved_address.state
-                order.city = last_saved_address.city
-
-            order.save()
 
 
 
-            context = {
-                'order' : order,
-                #'order' : data,
-                'cart_items' : cart_items,
-                'total' : total,
-                'tax' : tax,
-                'grand_total' : grand_total,
-                'coupons' : coupons,
-                'discount' : discount,
-                #'order_number' : order_number,
-            }
-            print('order number in place_order:',order_number)
-            return render(request,'orders/payments.html',context)
-        #else:
-            # If form is not valid, render the checkout page again with form errors
-        #    return render(request, 'checkout.html', {'form': form, 'cart_items': cart_items})
 
-    else:
-        return redirect('checkout')  # Redirect to checkout page for other HTTP methods
-'''
+# def coupon_activate(request,total=0, quantity=0):
+#     current_user = request.user
+#     print('current user inside place order',current_user)
 
-def coupon_activate(request):
-    current_user = request.user
-    try:
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
-        return redirect('store')
+#     # Get the cart associated with the current session
+#     try:
+#         cart = Cart.objects.get(cart_id=_cart_id(request))
+#     except Cart.DoesNotExist:
+#         # Redirect the user back to the store if the cart is empty or doesn't exist
+#         return redirect('store')
+#     # Fetch the selected address
 
-    cart_items = CartItem.objects.filter(cart=cart, is_active=True)
-    total = sum(item.product.price * item.quantity for item in cart_items)
 
-    coupons = cart.coupons.first()
-    discount = coupons.discount if coupons else Decimal(0)
+#     #if cart count is less than or equal to 0, then redirect back to shop page
+#     cart_items = CartItem.objects.filter(cart=cart,is_active=True)
+#     print('cart_items = ',cart_items)
+#     cart_count = cart_items.count()
+#     print('cartcount = ',cart_count,cart_items)
+#     if cart_count <= 0:
+#         return redirect('store')
+    
+    
+#     grand_total = Decimal('0')
+#     tax = Decimal('0')
+    
+#     for cart_item in cart_items:
+#         # Apply product offer if available
+#         product = cart_item.product
+#         offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
+#         if offer:
+#             total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
+#             product.price = product.price-(product.price*(offer.discount_percentage / 100))
+#         else:
+#             total += (product.price * cart_item.quantity)
+#             #total += (cart_item.product.price * cart_item.quantity)
+#         quantity += cart_item.quantity
+#     print('quantity',quantity)
 
-    grand_total = total - discount
-    tax = (2 * total) / 100
-    grand_total = float(grand_total) + tax
+    
+    
+#     #Fetch the coupon applied to the cart
+#     coupons = cart.coupons.first()
+#     print('coupon is :',coupons)
+#     #If there's no coupon applied, discount is zero
+#     discount = coupons.discount if coupons else Decimal(0)
+#     print('discount is',discount)
 
-    if request.method == 'POST':
-        form = CouponForm(request.POST)
-        if form.is_valid():
-            # Retrieve the existing order associated with the user
-            order = Order.objects.filter(user=current_user, is_ordered=False).first()
-            print('ORDER IS',order)
-            if order:
-                # Update order total with the discounted amount
-                order.order_total = grand_total
-                order.save()
 
-                # Apply the coupon to the order's coupons
-                cart.coupons.add(coupons)
+#     # Calculate the grand total after applying the discount
+#     grand_total = total - discount
+#     tax = (Decimal('2') * total) / Decimal('100')
+#     grand_total += tax
+#     print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
+#     print('request.method=',request.method)
 
-                # Redirect to the payment page with updated details
-                return redirect('payments')
-    else:
-        return redirect('checkout')
+#     if request.method == 'POST':
+#             form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
+           
+#             # store all the billing information inside order table
+#             data = Order()
+#             data.user = current_user
 
-    context = {
-        #'order' : order,
-        'cart_items': cart_items,
-        'total': total,
-        'tax': tax,
-        'grand_total': grand_total,
-        'coupons': coupons,
-        'discount': discount,
-    }
+#             data.order_total = grand_total
+#             data.tax = tax
+#             data.ip = request.META.get('REMOTE_ADDR')
+#             data.save()  #after save we got a data id
+            
+#             yr = int(mydatetime.today().strftime('%Y'))
+#             dt = int(mydatetime.today().strftime('%d'))
+#             mt = int(mydatetime.today().strftime('%m'))
+#             d = mydatetime(yr, mt, dt)
+#             current_date = d.strftime('%Y%m%d')  # 20240314
+#             print(current_date)
+#             order_number = current_date + str(data.id)
+#             data.order_number = order_number
+#             data.order_id = str(data.id)
+#             print('data.order_number...', data.order_number)
+#             print('data.order_ID...',data.order_id)
+#             #data.first_name = first_name
+#             data.save()
+#             print('data',data)
 
-    return render(request, 'orders/payments.html', context)
-'''
+#             order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)  # true when payment is successful
+#             #print('order is ',order)
+
+#             # Fetch the last saved address for the current user
+           
+#             last_saved_address = Addresses.objects.filter(user=current_user).order_by('-id').first()
+#             print('saved address is ....',last_saved_address)
+#              # Assign the last saved address to the order
+#             if last_saved_address:
+#                 order.first_name = last_saved_address.first_name
+#                 order.last_name = last_saved_address.last_name
+#                 order.phone = last_saved_address.phone
+#                 order.email = last_saved_address.email
+#                 order.address_line_1 = last_saved_address.address_line_1
+#                 order.address_line_2 = last_saved_address.address_line_2
+#                 order.country = last_saved_address.country
+#                 order.state = last_saved_address.state
+#                 order.city = last_saved_address.city
+
+#             order.save()
+            
+#             context = {
+#                 'order' : order,
+#                 #'order' : data,
+#                 'cart_items' : cart_items,
+#                 'total' : total,
+#                 'tax' : tax,
+#                 'grand_total' : grand_total,
+#                 'coupons' : coupons,
+#                 'discount' : discount,
+#                 #'order_number' : order_number,
+#             }
+#             print('order number in place_order:',order_number)
+#             return render(request,'orders/payments.html',context)
+        
+#     else:
+#         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
+
 
 
 def cancel_order(request,order_id):
@@ -1137,12 +1054,9 @@ def sales_report(request):
     currentuser = request.user
     print("currentuser, current_user_orders, ", currentuser , current_user_orders )
     if current_user_orders.exists():
-        # for order in current_user_orders:
-        #     order.coupon_count = 0
-        #     order.coupon_total = 0
-        #     order.save()
-        # Aggregate total coupon count and total discount across all orders related to the current user
-        total_coupon_count = current_user_orders.aggregate(total_coupons=Sum('coupon_count'))['total_coupons'] or 0
+        
+    # Aggregate total coupon count and total discount across all orders related to the current user
+       ## total_coupon_count = current_user_orders.aggregate(total_coupons=Sum('coupon_count'))['total_coupons'] or 0
         total_discount = current_user_orders.aggregate(total_discount=Sum('coupon_total'))['total_discount'] or 0
 
          # Update the coupon_count field for each order in current_user_orders
@@ -1181,7 +1095,7 @@ def sales_report(request):
         sales_report_instance.overall_sales_count = overall_sales_count
         sales_report_instance.total_sales_amount = total_sales_amount
         sales_report_instance.total_discount = total_discount
-        sales_report_instance.total_coupon_count = total_coupon_count
+        #sales_report_instance.total_coupon_count = total_coupon_count
         sales_report_instance.save()
     else:
         # Create new instance
@@ -1192,7 +1106,7 @@ def sales_report(request):
             overall_sales_count=overall_sales_count,
             total_sales_amount=total_sales_amount,
             total_discount=total_discount,
-            total_coupon_count=total_coupon_count
+            #total_coupon_count=total_coupon_count
         )
     
      # Calculate the amount somehow
@@ -1210,7 +1124,7 @@ def sales_report(request):
     print("total_coupons",total_coupon_count)
     print( 'total_sales_amount',total_sales_amount)
     print( 'total_discount', total_discount)
-    print ('total_coupon_count', total_coupon_count)
+    #print ('total_coupon_count', total_coupon_count)
     print('overall_sales_count', overall_sales_count)
 
     
@@ -1219,7 +1133,7 @@ def sales_report(request):
         'sales_report_instance': sales_report_instance,
         'total_sales_amount': total_sales_amount,
         'total_discount': total_discount,
-        'total_coupon_count': total_coupon_count,
+        #'total_coupon_count': total_coupon_count,
         'overall_sales_count': overall_sales_count,
         'start_date': start_date,
         'end_date': end_date,
@@ -1227,3 +1141,6 @@ def sales_report(request):
     }
     
     return render(request, 'sales_report.html', context)
+
+
+
