@@ -27,7 +27,7 @@
                             <th scope="col">Date</th>
                             <th scope="col">Status</th>
                             <th scope="col">Cancel Order</th>
-                            <th scope="col">Return Order</th>
+                            <!--<th scope="col">Return Order</th>-->
                           </tr>
                         </thead>
                         <tbody>
@@ -45,11 +45,11 @@
                               <a href="{% url 'cancel_order' order_id=order.id %}" class="btn btn-danger">Cancel</a>
                               
                             </td>
-                            <td>
+                            <!--<td>
                               
                               <a href="{% url 'return_request' order_id=order.id %}" class="btn btn-danger">Return</a>
                               
-                            </td>
+                            </td>-->
                            
                           </tr>
                           {% endfor %}

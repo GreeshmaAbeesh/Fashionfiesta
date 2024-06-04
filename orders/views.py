@@ -37,6 +37,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 
 
 
@@ -198,8 +199,10 @@ def place_order(request, total=0, quantity=0):
     except Cart.DoesNotExist:
         # Redirect the user back to the store if the cart is empty or doesn't exist
         return redirect('store')
+    
     # Fetch the selected address
 
+    
 
     #if cart count is less than or equal to 0, then redirect back to shop page
     cart_items = CartItem.objects.filter(cart=cart,is_active=True)
@@ -272,8 +275,10 @@ def place_order(request, total=0, quantity=0):
     print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
     #print('request.method=',request.method)
 
-    # Remove coupon ID from session
-    del request.session['coupon_id']
+    # Remove coupon ID from session if it exists
+    if 'coupon_id' in request.session:
+        del request.session['coupon_id']
+
 
 
     if request.method == 'POST':
@@ -602,11 +607,28 @@ def save_address(request):
     
     return render(request,'store/nav_address.html',context)
 
+@require_http_methods(["DELETE"])
 def delete_address(request, address_id):
     address = get_object_or_404(Addresses, pk=address_id, user=request.user)
+    address.delete()
+    return JsonResponse({'success': True})
+
+
+def edit_address(request, address_id):
+    address = get_object_or_404(Addresses, pk=address_id, user=request.user)
     if request.method == 'POST':
-        address.delete()
-    return redirect('save_address')  # Redirect to address list page after deletion
+        form = AddressesForm(request.POST, instance=address)
+        if form.is_valid():
+            form.save()
+            return redirect('save_address')
+
+    form = AddressesForm(instance=address)
+    context = {
+        'form': form,
+        'address': address,
+    }
+    return render(request, 'store/edit_address.html', context)
+    
 
 '''
 #@login_required
