@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from storeitem.models import PopularProduct,Variation,ProductOffer
-from orders.models import Wallet,OrderProduct
+from orders.models import Wallet,OrderProduct,Order
 from category.models import Category
 from .models import Cart,CartItem,Coupon
 from django.http import HttpResponse
@@ -154,6 +154,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         coupon = None  # Initialize coupon here
         original_total = 0  # Initialize original_total
         offer = 0  # Initialize offer here
+        savings = 0
 
         cart = Cart.objects.get(cart_id=_cart_id(request))
         cart_items = CartItem.objects.filter(cart=cart,is_active=True).order_by(F('product__price').asc()) 
@@ -169,7 +170,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         
 
         for cart_item in cart_items:
-            # Apply product offer if available
+           
             product = cart_item.product
             offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
             
@@ -327,6 +328,17 @@ def apply_coupon(request):
                 print('coupon from adminside',coupon)
                 print('coupon.id',coupon.id)
                 request.session['coupon_id'] = coupon.id
+
+                # Update user's orders with the applied coupon
+                orders = Order.objects.filter(user=request.user, coupon=None)
+                for order in orders:
+                    order.coupon = coupon
+                    order.save()
+
+                # Increment the usage count
+                coupon.usage_count += 1
+                coupon.save()
+                
                 return redirect('cart')
             except Coupon.DoesNotExist:
                 form.add_error('code', 'This coupon does not exist or is not valid.')

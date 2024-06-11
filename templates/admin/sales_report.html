@@ -1,126 +1,144 @@
-{% extends 'base.html' %}
+{% extends 'admin/base_site.html' %}
 {% load static %}
 
 {% block content %}
-
-
-<body>
-
-    <div class="container">
-      <div class="row mt-5">
-        <div class="col-md-6 offset-md-3">
-          <div class="card">
-            <div class="card-header">
-              <h1 class="text-center">Sales Report</h1>
+<div class="container">
+  <div class="row mt-5">
+    <div class="col-md-6 offset-md-3">
+      <div class="card">
+        <div class="card-header">
+          <h1 class="text-center">Sales Report</h1>
+          <a class="btn btn-primary" href="{% url 'admin:generate_sales_report_pdf' %}">Download PDF</a>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <h5>Total Sales Count: {{ overall_sales_count }}</h5>
+              <h5>Total Coupon Count: {{ total_coupon_count }}</h5>
             </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <h5>Total Sales Count: {{ overall_sales_count }}</h5>
-                  <h5>Total Coupon Count: {{ total_coupon_count }}</h5>
-                </div>
-                <div class="col-md-6">
-                  <h5>Total Order Amount: {{ total_sales_amount }}</h5>
-                  <h5>Total Discount Applied: {{ total_discount }}</h5>
-                </div>
-              </div>
+            <div class="col-md-6">
+              <h5>Total Order Amount: {{ total_sales_amount }}</h5>
+              <h5>Total Discount Applied: {{ total_discount }}</h5>
             </div>
           </div>
         </div>
       </div>
     </div>
-  
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  
-    <div class="container mt-5">
-        <h2>Sales Breakdown</h2>
-      
-        <div class="row mt-3">
-          <div class="col-md-4">
-            <label for="dateFilter" class="form-label">Select Date:</label>
-            <select id="dateFilter" class="form-select">
-              <option value="">All Dates</option>
-              <!-- Populate with unique dates -->
-              <!-- Example: <option value="2024-05-01">2024-05-01</option> -->
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="monthFilter" class="form-label">Select Month:</label>
-            <select id="monthFilter" class="form-select">
-              <option value="">All Months</option>
-              <!-- Populate with unique months -->
-              <!-- Example: <option value="05">May</option> -->
-            </select>
-          </div>
-          <div class="col-md-4">
-            <label for="yearFilter" class="form-label">Select Year:</label>
-            <select id="yearFilter" class="form-select">
-              <option value="">All Years</option>
-              <!-- Populate with unique years -->
-              <!-- Example: <option value="2024">2024</option> -->
-            </select>
-          </div>
-        </div>
-      
-        <table class="table table-bordered table-striped mt-3">
-          <thead>
-            <tr>
-                <th>Date</th>
-                <th>Order Number</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Address Line 1</th>
-                <th>Country</th>
-                <th>State</th>
-                <th>City</th>
-                <th>Order Total</th>
-                <th>Tax</th>
-                <th>Status</th>
-                <th>Is Ordered</th>
-                <th>Created At</th>
-                <th>Updated At</th>
-            </tr>
-          </thead>
-          <tbody id="salesTableBody">
-            <!-- Sales data will be populated here -->
-             <!-- Sales data will be populated here -->
-            {% for entry in orders %}
-                <tr>
-                    <td>{{ entry.created_at|date:"Y-m-d" }}</td>
-                    <td>{{ entry.order_number }}</td>
-                    <td>{{ entry.first_name }}</td>
-                    <td>{{ entry.last_name }}</td>
-                    <td>{{ entry.phone }}</td>
-                    <td>{{ entry.email }}</td>
-                    <td>{{ entry.address_line_1 }}</td>
-                    <td>{{ entry.country }}</td>
-                    <td>{{ entry.state }}</td>
-                    <td>{{ entry.city }}</td>
-                    <td>{{ entry.order_total }}</td>
-                    <td>{{ entry.tax }}</td>
-                    <td>{{ entry.status }}</td>
-                    <td>{{ entry.is_ordered }}</td>
-                    <td>{{ entry.created_at }}</td>
-                    <td>{{ entry.updated_at }}</td>
-                </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  </div>
+</div>
+
+<div class="container mt-5">
+  <h2>Sales Breakdown</h2>
+
+  <form method="get" action="">
+    <div class="row">
+      <div class="col-md-4">
+        <label for="date_range" class="form-label">Date Range:</label>
+        <select id="date_range" name="date_range" class="form-select">
+          <option value="custom" {% if date_range == "custom" %}selected{% endif %}>Custom</option>
+          <option value="daily" {% if date_range == "daily" %}selected{% endif %}>Daily</option>
+          <option value="weekly" {% if date_range == "weekly" %}selected{% endif %}>Weekly</option>
+          <option value="yearly" {% if date_range == "yearly" %}selected{% endif %}>Yearly</option>
+        </select>
       </div>
-      
-      <!-- Bootstrap Bundle with Popper -->
+      <div class="col-md-4">
+        <label for="start_date" class="form-label">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+      </div>
+      <div class="col-md-4">
+        <label for="end_date" class="form-label">End Date:</label>
+        <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Filter</button>
+  </form>
+
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <label for="dateFilter" class="form-label">Select Date:</label>
+      <select id="dateFilter" class="form-select">
+        <option value="">All Dates</option>
+        <!-- Populate with unique dates -->
+        {% for entry in orders %}
+        <option value="{{ entry.created_at|date:"Y-m-d" }}">{{ entry.created_at|date:"Y-m-d" }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="monthFilter" class="form-label">Select Month:</label>
+      <select id="monthFilter" class="form-select">
+        <option value="">All Months</option>
+        <!-- Populate with unique months -->
+        {% for entry in orders %}
+        <option value="{{ entry.created_at|date:"m" }}">{{ entry.created_at|date:"F" }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="yearFilter" class="form-label">Select Year:</label>
+      <select id="yearFilter" class="form-select">
+        <option value="">All Years</option>
+        <!-- Populate with unique years -->
+        {% for entry in orders %}
+        <option value="{{ entry.created_at|date:"Y" }}">{{ entry.created_at|date:"Y" }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <table class="table table-bordered table-striped mt-3">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Order Number</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Address Line 1</th>
+        <th>Country</th>
+        <th>State</th>
+        <th>City</th>
+        <th>Order Total</th>
+        <th>Tax</th>
+        <th>Status</th>
+        <th>Is Ordered</th>
+        <th>Created At</th>
+        <th>Updated At</th>
+      </tr>
+    </thead>
+    <tbody id="salesTableBody">
+      {% for entry in orders %}
+      <tr>
+        <td>{{ entry.created_at|date:"Y-m-d" }}</td>
+        <td>{{ entry.order_number }}</td>
+        <td>{{ entry.first_name }}</td>
+        <td>{{ entry.last_name }}</td>
+        <td>{{ entry.phone }}</td>
+        <td>{{ entry.email }}</td>
+        <td>{{ entry.address_line_1 }}</td>
+        <td>{{ entry.country }}</td>
+        <td>{{ entry.state }}</td>
+        <td>{{ entry.city }}</td>
+        <td>{{ entry.order_total }}</td>
+        <td>{{ entry.tax }}</td>
+        <td>{{ entry.status }}</td>
+        <td>{{ entry.is_ordered }}</td>
+        <td>{{ entry.created_at }}</td>
+        <td>{{ entry.updated_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
   // JavaScript for populating dropdown filters and filtering data
-  // Replace placeholder values with your actual data
   document.addEventListener("DOMContentLoaded", function() {
     // Example data
     var orders = [
-      // Replace this with the actual data from your server
       {% for entry in orders %}
       {
         created_at: "{{ entry.created_at }}",
@@ -233,10 +251,4 @@
     document.getElementById("yearFilter").addEventListener("change", filterData);
   });
 </script>
-
-      
-    
-</body>
-
-
 {% endblock %}

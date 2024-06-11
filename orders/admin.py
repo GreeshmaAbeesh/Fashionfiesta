@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest,SalesReportNew
+from .models import Payment,Order,OrderProduct,Addresses,Wallet,ReturnRequest
 from django.db.models import Sum
 from django.views import View
 from django.http import HttpResponse
@@ -7,6 +7,28 @@ from django.template.response import TemplateResponse
 from django.utils.translation import gettext_lazy as _
 from django.db.models.functions import ExtractMonth, ExtractYear
 from django.db.models import DateField, Count, Sum
+
+from django.urls import path
+from django.shortcuts import render
+from django.utils import timezone
+from django.db.models import Sum
+from .models import Order, SalesReportNew
+import io
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib.units import inch
+from reportlab.lib.pagesizes import letter
+from django.http import HttpResponse
+from django.utils import timezone
+from io import BytesIO
+from reportlab.lib.styles import getSampleStyleSheet
+from django.db.models import Sum
+
+
+
+
 
 
 
@@ -75,11 +97,164 @@ class SalesReportAdminView(View):
 #admin.site.register_view('sales_report', 'Sales Report', view=SalesReportAdminView.as_view())
 '''
 
-class SalesReportNewAdmin(admin.ModelAdmin):
-    list_display = ['start_date', 'end_date', 'date_range', 'overall_sales_count', 'total_sales_amount', 'total_discount']
+class SalesReportAdmin(admin.ModelAdmin):
+    change_list_template = "admin/sales_report.html"
+
+    def changelist_view(self, request, extra_context=None):
+        # Default start and end dates for custom date range
+        start_date = end_date = None
+
+        # Default date range selection
+        date_range = request.GET.get('date_range', 'custom')
+
+        # Get today's date
+        today = timezone.now().date()
+
+        # Set start and end dates based on date range selection
+        if date_range == 'daily':
+            start_date = end_date = today
+        elif date_range == 'weekly':
+            start_date = today - timezone.timedelta(days=today.weekday())
+            end_date = start_date + timezone.timedelta(days=6)
+        elif date_range == 'yearly':
+            start_date = today.replace(month=1, day=1)
+            end_date = today.replace(month=12, day=31)
+        else:
+            start_date = today.replace(day=1)
+            end_date = today
+
+        # Get orders within the selected date range
+        orders = Order.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).order_by('-created_at')
+
+        # Calculate total sales amount
+        total_sales_amount = round(orders.aggregate(total_sales=Sum('order_total'))['total_sales'] or 0, 2)
+
+        # Calculate total discount
+        total_discount = orders.aggregate(total_discount=Sum('discount'))['total_discount'] or 0
+
+        # Calculate total coupon count
+        total_coupon_count = orders.exclude(coupon=None).count()
+
+        # Calculate overall sales count
+        overall_sales_count = orders.count()
+
+        # Check if SalesReport instance already exists for the specified date range
+        sales_report_instance, created = SalesReportNew.objects.get_or_create(
+            start_date=start_date,
+            end_date=end_date,
+            date_range=date_range,
+            defaults={
+                'overall_sales_count': overall_sales_count,
+                'total_sales_amount': total_sales_amount,
+                'total_discount': total_discount,
+                'total_coupon_count': total_coupon_count
+            }
+        )
+        if not created:
+            sales_report_instance.overall_sales_count = overall_sales_count
+            sales_report_instance.total_sales_amount = total_sales_amount
+            sales_report_instance.total_discount = total_discount
+            sales_report_instance.total_coupon_count = total_coupon_count
+            sales_report_instance.save()
+
+        context = {
+            'orders': orders,
+            'sales_report_instance': sales_report_instance,
+            'total_sales_amount': total_sales_amount,
+            'total_discount': total_discount,
+            'total_coupon_count': total_coupon_count,
+            'overall_sales_count': overall_sales_count,
+            'start_date': start_date,
+            'end_date': end_date,
+            'date_range': date_range,
+        }
+        
+        return render(request, "admin/sales_report.html", context)
     
+    def generate_sales_report_pdf(self, request):
+        # Fetch the sales report data using the same logic as in the changelist_view
+        date_range = request.GET.get('date_range', 'custom')
+        today = timezone.now().date()
 
+        if date_range == 'daily':
+            start_date = end_date = today
+        elif date_range == 'weekly':
+            start_date = today - timezone.timedelta(days=today.weekday())
+            end_date = start_date + timezone.timedelta(days=6)
+        elif date_range == 'yearly':
+            start_date = today.replace(month=1, day=1)
+            end_date = today.replace(month=12, day=31)
+        else:
+            start_date = today.replace(day=1)
+            end_date = today
 
+        orders = Order.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).order_by('-created_at')
+        total_sales_amount = round(orders.aggregate(total_sales=Sum('order_total'))['total_sales'] or 0, 2)
+        total_discount = orders.aggregate(total_discount=Sum('discount'))['total_discount'] or 0
+        total_coupon_count = orders.exclude(coupon=None).count()
+        overall_sales_count = orders.count()
+
+        # Create the PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        centered_style = styles['Title']
+        centered_style.alignment = 1  # Center alignment
+
+        # Add sales report content in the middle of the first page
+        elements.append(Paragraph("Sales Report", centered_style))
+        elements.append(Spacer(1, 40))
+
+        elements.append(Paragraph(f"Date Range: {start_date} to {end_date}", styles['Normal']))
+        elements.append(Paragraph(f"Total Sales Amount: ${total_sales_amount}", styles['Normal']))
+        elements.append(Paragraph(f"Total Discount: ${total_discount}", styles['Normal']))
+        elements.append(Paragraph(f"Total Coupon Count: {total_coupon_count}", styles['Normal']))
+        elements.append(Paragraph(f"Overall Sales Count: {overall_sales_count}", styles['Normal']))
+        elements.append(Spacer(1, 50))
+        #elements.append(PageBreak())
+
+        # Prepare table data
+        data = [['S.No', 'Date', 'Order Number', 'Customer Name', 'Order Total']]
+        for idx, order in enumerate(orders, start=1):
+            data.append([
+                idx,
+                order.created_at.strftime("%Y-%m-%d"),
+                order.order_number,
+                f"{order.first_name} {order.last_name}",
+                f"${order.order_total}",
+            ])
+
+        # Create a table and style it
+        table = Table(data, colWidths=[0.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        elements.append(table)
+
+        # Build the PDF document
+        doc.build(elements)
+
+        buffer.seek(0)
+        return HttpResponse(buffer, content_type='application/pdf')
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('generate_sales_report_pdf/', self.generate_sales_report_pdf, name='generate_sales_report_pdf'),
+        ]
+        return custom_urls + urls
+
+admin.site.register(SalesReportNew, SalesReportAdmin)
 
 
 admin.site.register(Payment)
@@ -89,7 +264,7 @@ admin.site.register(Addresses)
 admin.site.register(Wallet,WalletAdmin)
 
 admin.site.register(ReturnRequest,ReturnRequestAdmin)
-admin.site.register(SalesReportNew,SalesReportNewAdmin)
+
 
 
 # Add a custom admin page for sales report# Add a custom admin page for sales report

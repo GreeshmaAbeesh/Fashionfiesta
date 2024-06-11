@@ -1,6 +1,8 @@
 from django.urls import path
 from .import views
+from django.contrib import admin
 #from .views import SalesReportAdminView
+from .admin import SalesReportAdmin
 
 urlpatterns = [
     path('place_order/',views.place_order,name='place_order'),
@@ -21,6 +23,6 @@ urlpatterns = [
     #path('sales_report/', SalesReportAdminView.as_view(), name='sales_report'),
     #path('order_complete_pdf/',views.order_complete_pdf,name='order_complete_pdf'),
     path('generate-pdf/', views.generate_pdf, name='generate_pdf'),
-    
+    path('admin/sales-report/', SalesReportAdmin.changelist_view, name='sales_report'),
 ]
    

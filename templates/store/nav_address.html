@@ -63,10 +63,10 @@
                         <input type="text" name="country" class="form-control" required>
                     </div>
                 </div>
-                <div class="form-row">
+                <!--<div class="form-row">
                     <label for="">Order Note</label>
                     <textarea name="order_note" id="" cols="30" rows="5" class="form-control"></textarea>
-                </div>
+                </div>-->
           
                 <!-- Submit button for saving the new address -->
                 <!--<a href ="{% url 'checkout' %}" type="submit" class="btn btn-primary btn-block mt-3">Save Address</a>-->
@@ -169,8 +169,14 @@
                                 <h5 class="card-title">Address</h5>
                                 <p class="card-text"> {{address.first_name}}, {{address.last_name }}, {{ address.address_line_1 }}, {{ address.address_line_2 }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
                                 <a href="{% url 'edit_address' address.id %}" class="btn btn-warning ml-2">Edit</a>
-                                <a href="{% url 'place_order' %}" class="btn btn-warning ml-2">Place Order</a>
                                 <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
+                               <!-- <a href="{% url 'payments' %}" class="btn btn-warning ml-2">Place Order</a> -->
+                               <form method="post" action="{% url 'place_order' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="address_id" value="{{ address.id }}">
+                                <button type="submit" class="btn btn-primary ml-2">Place Order</button>
+                                </form>
+                                
 
                             </div>
                         </div>

@@ -16,13 +16,14 @@ class Cart(models.Model):
     
 
 class CartItem(models.Model):
-    user = models.ForeignKey(Account, on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE,null=True,blank=True)
     product = models.ForeignKey(PopularProduct, on_delete=models.CASCADE)
     variations = models.ManyToManyField(Variation, blank=True)
-    cart    = models.ForeignKey(Cart, on_delete=models.CASCADE,null=True)
+    cart    = models.ForeignKey(Cart, on_delete=models.CASCADE,null=True,blank=True)
     quantity = models.IntegerField()
     order_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_active = models.BooleanField(default=True)
+    is_out_of_stock = models.BooleanField(default=False)  # New field to indicate out-of-stock status
 
     def sub_total(self):
         return self.product.price * self.quantity  #here self.product.price means inside CartItem-product-price in PopularProduct using foreign key  * quantity od item in  CartItem-
@@ -54,6 +55,8 @@ class Coupon(models.Model):
     valid_from = models.DateTimeField()
     valid_to = models.DateTimeField()
     active = models.BooleanField(default=True)
+    usage_count = models.PositiveIntegerField(default=0)  # New field for tracking usage
+
 
     def __str__(self):
         return self.code
