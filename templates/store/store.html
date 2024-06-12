@@ -114,17 +114,28 @@
                     {% csrf_token %}
                     <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
                         <i class="icon-control fa fa-chevron-down"></i>
-                        <h6 class="title">Sort </h6>
+                        <h6 class="title">Sort and Filter</h6>
                     </a>
                     <div class="filter-content collapse show" id="collapse_3" style="">
                         <div class="card-body">
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label>Sort</label>
-                                    <select class="mr-2 form-control" name="sort_by_price">
+                                    <select class="mr-2 form-control" name="sort_by">
+                                        <option value="">Select</option>
                                         <option value="price">Price</option>
                                         <option value="newly_added">Newly Added</option>
                                     </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Min Price</label>
+                                    <input type="number" class="form-control" name="min_price" placeholder="Min Price">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Max Price</label>
+                                    <input type="number" class="form-control" name="max_price" placeholder="Max Price">
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-block btn-primary">Apply</button>
