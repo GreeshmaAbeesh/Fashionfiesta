@@ -73,23 +73,6 @@ def register(request):
     }
     return render(request,'accounts/register.html',context)
 
-'''
-def activate(request, uidb64, token):
-    try:
-        uid = force_str(urlsafe_base64_decode(uidb64))
-        user = Account.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
-        user = None
-
-    if user is not None and default_token_generator.check_token(user, token):
-        # Activate the user
-        user.is_active = True
-        user.save()
-        messages.success(request, 'Your account has been activated. You can now log in.')
-        return redirect('login')
-    else:
-        return HttpResponse('Activation link is invalid or expired.')
-'''                  
 
 def login(request):
     if request.method == 'POST':
@@ -108,108 +91,6 @@ def login(request):
     return render(request,'accounts/login.html')
 
 
-
-
-'''
-def login(request):
-     
-    if request.method=='POST':
-        print("inside post")
-        email=request.POST['email']
-        password=request.POST['password']
-
-        user=auth.authenticate(email=email,password=password)
-
-    
-        if user is not None:  # user is not none : here user means a user who exist after authenticated username and password
-            print("inside user")
-
-            request.session['email']=email
-            request.session['password']=password
-            print("before sent otp")
-            send_otp(request)
-            print("before render to otp.html")
-            return render(request,"accounts/otp.html",{'email':email})
-        else:
-            messages.error(request,'Invalid Username or password')
-            return redirect('login')
-    else:
-        print("else post")
-        return render(request,"accounts/login.html")
-    
-
-
-
-def send_otp(request):
-    s=""
-    for x in range(0,4):
-        s+=str(random.randint(0,9))
-    request.session["otp"]=s
-    send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
-    return render(request,"accounts/otp.html")
-
-
-# working otp
-
-def send_otp(request):
-    otp=''.join(str(random.randint(0,9)) for _ in range(4))
-
-    # store otp and its expiration time session
-    otp_expiration_time = datetime.now() + timedelta(minutes=1)
-
-     # Convert the expiration time to a string for serialization
-    otp_expiration_str = otp_expiration_time.isoformat()
-
-    request.session["otp"] = {
-        "value" : otp,
-        "expiration_time" : otp_expiration_str,
-    }
-
-    #Send otp via email
-    send_mail("OTP for sign up",otp,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
-
-    return render(request,"accounts/otp.html")
-
-
-
-
-def otp_verification(request):
-    if request.method=="POST":
-        print("otp verification")
-        otp_=request.POST.get("otp")
-        print(otp_)
-        stored_otp_data = request.session.get("otp")
-
-        if stored_otp_data:
-            stored_otp = stored_otp_data.get("value")
-            expiration_time_str = stored_otp_data.get("expiration_time")
-
-            # Convert the expiration time string back to datetime
-
-            expiration_time = datetime.fromisoformat(expiration_time_str)
-
-            # Check if the current time is later than the expiration time
-            if datetime.now() > expiration_time:
-                messages.error(request,"OTP has expired.Please request a new otp.")
-                return redirect('login')
-        
-            if otp_==stored_otp:
-                print("entered to make_password")
-                messages.info(request,"signed successfully...")
-                #print("signed succesfully")
-                User.is_active=True
-                #print("Request:", request.__dict__)
-                user=auth.authenticate(email=request.session['email'],password=request.session['password'])
-                auth.login(request,user)
-                return redirect('home')
-            else:
-                messages.error(request,"otp doesn't match")
-                print("OTP not matched")
-                return redirect('login')
-    print("Not OTP post case") 
-    return render(request,"accounts/otp.html")
-
- '''    
 
 
 @login_required(login_url='login') # we can logged out the system when you are log in.
@@ -416,24 +297,5 @@ def cancel_order(request,order_id):
     user_profile.orders_count = F('orders_count') - 1
     #user_profile.ordered_items_count = F('ordered_items_count') - ordered_items_count
     user_profile.save()
-
-
-        
     return redirect('my_orders') 
 
-'''
-    try:
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
-        # Redirect the user back to the store if the cart is empty or doesn't exist
-        return redirect('store')
-    cart_items = CartItem.objects.filter(cart=cart)
-    
-    for item in cart_items:
-        # Increase the quantity of the sold products
-        product = PopularProduct.objects.get(id=item.product_id)
-        product.stock += item.quantity
-        product.save()
-    # Redirect the user back to the order history page or any other appropriate page
-'''
-    

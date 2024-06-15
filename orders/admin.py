@@ -25,6 +25,7 @@ from django.utils import timezone
 from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet
 from django.db.models import Sum
+from django.core.paginator import Paginator
 
 
 
@@ -157,6 +158,15 @@ class SalesReportAdmin(admin.ModelAdmin):
             sales_report_instance.total_coupon_count = total_coupon_count
             sales_report_instance.save()
 
+         # Add pagination
+        paginator = Paginator(orders, 10)  # Show 10 orders per page
+        print('paginator is:',paginator)
+        page_number = request.GET.get('page')
+        print('page_number is:',page_number)
+        page_obj = paginator.get_page(page_number)
+        print('page_obj is:',page_obj)
+
+
         context = {
             'orders': orders,
             'sales_report_instance': sales_report_instance,
@@ -167,6 +177,7 @@ class SalesReportAdmin(admin.ModelAdmin):
             'start_date': start_date,
             'end_date': end_date,
             'date_range': date_range,
+            'page_obj': page_obj,
         }
         
         return render(request, "admin/sales_report.html", context)

@@ -33,22 +33,6 @@ class CartItem(models.Model):
     
 
 
-'''
-class ProductOffer(models.Model):
-    product = models.ForeignKey(PopularProduct, on_delete=models.CASCADE, related_name='offers')
-    discount_percentage = models.FloatField()
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-
-    def is_valid(self):
-        now = timezone.now()
-        return self.start_date <= now <= self.end_date
-
-    def __str__(self):
-        return f"{self.product.product_name} - {self.discount_percentage}%"
-'''
-
-
 class Coupon(models.Model):
     code = models.CharField(max_length=50, unique=True)
     discount = models.DecimalField(max_digits=5, decimal_places=2)

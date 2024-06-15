@@ -84,9 +84,7 @@ def payments(request):
         order.save()
 
         # MOVE THE CART ITEMS TO ORDER PRODUCT TABLE
-        #cart_items = CartItem.objects.filter(user=request.user)
-        #print('cart_item :',cart_items)
-
+        
         try:
             cart = Cart.objects.get(cart_id=_cart_id(request))
         except Cart.DoesNotExist:
@@ -125,16 +123,14 @@ def payments(request):
 
         #send order received email to customer
         mail_subject = 'Thank you for your order'
-        #print("enter into the mail")
         message = render_to_string('orders/order_recieved_email.html',{
             'user' : request.user,
             'order': order,
             
         })
-        #print(message)
+        
         to_email = request.user.email  # we got email from user and send to it
         send_email = EmailMessage(mail_subject, message ,to=[to_email])
-        #print("message send to email",send_email,"to_email:",to_email)
         send_email.send()
 
         #send order number and transaction id back to send data method via jsonrespose
@@ -144,46 +140,11 @@ def payments(request):
 
         }
 
-        #return render(request,'orders/payments.html')
         return JsonResponse(data)
-    
     return render(request,'orders/payments.html')
   
 
 
-
-'''       # Get the cart associated with the current session
-
-    try:
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
-        # Redirect the user back to the store if the cart is empty or doesn't exist
-        return redirect('store')
-    
-    cart_items = CartItem.objects.filter(cart=cart)
-    print('cartitems: ',cart_items)
-
-    for item in cart_items:
-        orderproduct = OrderProduct()
-        orderproduct.order_id = order.is_ordered
-        orderproduct.payment = payment
-        orderproduct.user_id = request.user.id
-        orderproduct.product_id = item.product.id
-        orderproduct.quantity = item.quantity
-        orderproduct.product_price = item.product.price
-        orderproduct.ordered = True
-        orderproduct.save()
-
-    # Reduce the quantity of the sold products
-
-    
-
-    
-
-   
-    return render(request,'orders/payments.html')
-
-'''
 
 def _cart_id(request):                  # cart made as private
     cart = request.session.session_key  # inside cookies there is session and it gives session id.
@@ -477,114 +438,7 @@ def order_complete(request):
         return redirect('home')
 
     
-'''
-# Generate pdf for invoice
-def order_complete_pdf(request):
-    #create bytestream buffer
-    buff = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=letter, bottoup=0)
-    # create a text object
-    textob = c.beginText()
-    textob.setTextOrgin(inch,inch)
-    textob.setFont("Helvetica",14)
 
-    #Add some lines of text
-    lines = [
-        "This is line 1",
-        "This is line 2",
-        "This is line 3",
-      
-    ]
-
-'''
-
-'''
-def cash_on_delivery(request):
-    if request.method == "POST":
-        # Assuming you have a form that submits the order id
-        order_id = request.POST.get('order_id')
-        order = Order.objects.get(id=order_id)
-
-        
-        # Create a Payment instance
-        payment = Payment.objects.create(
-            user=request.user,
-            payment_method='Cash on Delivery',
-            amount_paid= grand_total,
-            status='Pending'  # Assuming you initially set status as pending for cash on delivery orders
-        )
-
-        # Update the order with payment details
-        order.payment_id = payment
-        order.order_total = grand_total
-        order.tax = tax
-        order.status = 'Accepted'  # Assuming you change order status to accepted upon choosing cash on delivery
-        order.save()
-
-        # Mark order products as ordered
-        order_products = OrderProduct.objects.filter(order=order)
-        for order_product in order_products:
-            order_product.ordered = True
-            order_product.save()
-
-        return redirect('payment_successful')  # Redirect to payment successful page or any other page
-
-    return render(request, 'orders/cod_order_complete.html')
-
-def cash_on_delivery(request):
-    return render(request, 'orders/cod_order_complete.html')
-    '''
-'''
-def cash_on_delivery(request):
-    print('request',request.method)
-    if request.method == "POST":
-        order_number = request.POST.get('order_number')
-        print('order_number',order_number)
-        transID = request.POST.get('payment_id')
-        print('transID',transID)
-        
-        try:
-            order = Order.objects.get(order_number=order_number, is_ordered=False)
-            print("order",order)
-            order.is_ordered = True
-            order.save()
-
-            
-            context = {
-                'order': order,
-                'transID': transID,  # Pass payment ID to template context
-            }
-            return render(request, 'orders/cod_order_complete.html', context)
-        except Order.DoesNotExist:
-            # Handle case where order is not found
-            pass
-'''
-'''
-159 
-    # Fetch the selected address
-    if request.method == 'POST':
-        address_id = request.POST.get('address_id')
-        if address_id:
-            address = Addresses.objects.get(id=address_id)
-        else:
-            # If no address is selected, use the address from the form
-            form = OrderForm(request.POST)
-            if form.is_valid():
-                address = Addresses.objects.create(
-                    user=current_user,
-                    first_name=form.cleaned_data['first_name'],
-                    last_name=form.cleaned_data['last_name'],
-                    email=form.cleaned_data['email'],
-                    phone=form.cleaned_data['phone'],
-                    address_line_1=form.cleaned_data['address_line_1'],
-                    address_line_2=form.cleaned_data['address_line_2'],
-                    city=form.cleaned_data['city'],
-                    state=form.cleaned_data['state'],
-                    country=form.cleaned_data['country']
-                )
-
-
-'''
 def cash_on_delivery(request):
     print('request',request.method)
     
@@ -698,228 +552,6 @@ def edit_address(request, address_id):
     return render(request, 'store/edit_address.html', context)
     
 
-'''
-#@login_required
-def address_list(request):
-    addresses = Addresses.objects.filter(user=request.user)
-    return render(request, 'orders/address_list.html', {'addresses': addresses})
-'''
-
-
-'''
-def save_address(request):
-    if request.method == 'POST':
-        form = AddressesForm(request.POST)
-        if form.is_valid():
-            address = form.save(commit=False)
-            address.user = request.user
-            address.save()
-            return redirect('address_list')
-    else:
-        form = AddressesForm()
-    addresses = Addresses.objects.filter(user=request.user)
-    
-    return render(request, 'orders/address.html', {'form': form,},{'addresses': addresses})
-
-
-
-def address_list(request):
-    addresses = Addresses.objects.filter(user=request.user)
-    return render(request, 'orders/address_list.html', )
-    
-'''
-
-
-
-# def coupon(request):
-   
-#     if request.method == "POST":
-#         code = request.POST.get("coupon_code")
-#         print('entered code:',code)
-
-#         # Check if the coupon code is provided
-#         if not code:
-#             messages.error(request, "Please provide a coupon code.")
-#             print("Please provide a coupon code.")
-#             return redirect("checkout")  # Redirect back to checkout if no coupon code provided
-
-#         # Retrieve the coupon from the database
-#         coupon = Coupon.objects.filter(code=code, active=True).first()
-#         print('coupon is :',coupon)
-
-#         if not coupon:
-#             messages.error(request, "Invalid coupon code.")
-#             print('given value is not coupon')
-#             return redirect("checkout")
-        
-        
-#         # Check if the code is the default code
-#         default_code = "CODE123"
-#         if code == default_code:
-#             messages.success(request, "Default coupon activated successfully.")
-#             print('coupon activated successfully')
-           
-#             cart = Cart.objects.get(cart_id=_cart_id(request))
-
-#             # Calculate the order total based on the sum of subtotals of all cart items
-#             cart_items = CartItem.objects.filter(cart=cart)
-#             order_total = sum(item.sub_total() for item in cart_items)
-#             print("total order",order_total)
-
-#             # Ensure the coupon discount does not exceed the order total
-#             discount = min(coupon.discount, order_total)
-#             print('MIN discount value', discount)
-
-
-#             cart.order_total = order_total - discount  # Subtract the discount, not coupon.discount
-#             print('cart.order_total is', cart.order_total)
-#             cart.save()
-
-#             # Add the coupon to the order's coupons
-#             cart.coupons.add(coupon)
-#             print('coupon successfully applied')
-#             messages.success(request, "Coupon applied successfully.")
-#             currentuser = request.user
-#             orders = Order.objects.filter(user=currentuser, is_ordered=False)
-
-#             if orders.exists():
-#                 # Assuming there's only one active order for a user at a time
-#                 order = orders.first()
-#                 order.coupon_count += 1
-#                 order.coupon_total += discount
-#                 order.save()
-
-#             coupon.save()
-    
-#             return coupon_activate(request)
-#     return redirect('checkout')            
-
-           
-
-
-
-
-# def coupon_activate(request,total=0, quantity=0):
-#     current_user = request.user
-#     print('current user inside place order',current_user)
-
-#     # Get the cart associated with the current session
-#     try:
-#         cart = Cart.objects.get(cart_id=_cart_id(request))
-#     except Cart.DoesNotExist:
-#         # Redirect the user back to the store if the cart is empty or doesn't exist
-#         return redirect('store')
-#     # Fetch the selected address
-
-
-#     #if cart count is less than or equal to 0, then redirect back to shop page
-#     cart_items = CartItem.objects.filter(cart=cart,is_active=True)
-#     print('cart_items = ',cart_items)
-#     cart_count = cart_items.count()
-#     print('cartcount = ',cart_count,cart_items)
-#     if cart_count <= 0:
-#         return redirect('store')
-    
-    
-#     grand_total = Decimal('0')
-#     tax = Decimal('0')
-    
-#     for cart_item in cart_items:
-#         # Apply product offer if available
-#         product = cart_item.product
-#         offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
-#         if offer:
-#             total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
-#             product.price = product.price-(product.price*(offer.discount_percentage / 100))
-#         else:
-#             total += (product.price * cart_item.quantity)
-#             #total += (cart_item.product.price * cart_item.quantity)
-#         quantity += cart_item.quantity
-#     print('quantity',quantity)
-
-    
-    
-#     #Fetch the coupon applied to the cart
-#     coupons = cart.coupons.first()
-#     print('coupon is :',coupons)
-#     #If there's no coupon applied, discount is zero
-#     discount = coupons.discount if coupons else Decimal(0)
-#     print('discount is',discount)
-
-
-#     # Calculate the grand total after applying the discount
-#     grand_total = total - discount
-#     tax = (Decimal('2') * total) / Decimal('100')
-#     grand_total += tax
-#     print("GRANDTOTAL,TOTAL,TAX",grand_total,total,tax)
-#     print('request.method=',request.method)
-
-#     if request.method == 'POST':
-#             form = CouponForm(request.POST)  # request to recieve the post items(name,address,etc..) to Orderform in forms.py
-           
-#             # store all the billing information inside order table
-#             data = Order()
-#             data.user = current_user
-
-#             data.order_total = grand_total
-#             data.tax = tax
-#             data.ip = request.META.get('REMOTE_ADDR')
-#             data.save()  #after save we got a data id
-            
-#             yr = int(mydatetime.today().strftime('%Y'))
-#             dt = int(mydatetime.today().strftime('%d'))
-#             mt = int(mydatetime.today().strftime('%m'))
-#             d = mydatetime(yr, mt, dt)
-#             current_date = d.strftime('%Y%m%d')  # 20240314
-#             print(current_date)
-#             order_number = current_date + str(data.id)
-#             data.order_number = order_number
-#             data.order_id = str(data.id)
-#             print('data.order_number...', data.order_number)
-#             print('data.order_ID...',data.order_id)
-#             #data.first_name = first_name
-#             data.save()
-#             print('data',data)
-
-#             order = Order.objects.get(user=current_user,is_ordered=False,order_number=order_number)  # true when payment is successful
-#             #print('order is ',order)
-
-#             # Fetch the last saved address for the current user
-           
-#             last_saved_address = Addresses.objects.filter(user=current_user).order_by('-id').first()
-#             print('saved address is ....',last_saved_address)
-#              # Assign the last saved address to the order
-#             if last_saved_address:
-#                 order.first_name = last_saved_address.first_name
-#                 order.last_name = last_saved_address.last_name
-#                 order.phone = last_saved_address.phone
-#                 order.email = last_saved_address.email
-#                 order.address_line_1 = last_saved_address.address_line_1
-#                 order.address_line_2 = last_saved_address.address_line_2
-#                 order.country = last_saved_address.country
-#                 order.state = last_saved_address.state
-#                 order.city = last_saved_address.city
-
-#             order.save()
-            
-#             context = {
-#                 'order' : order,
-#                 #'order' : data,
-#                 'cart_items' : cart_items,
-#                 'total' : total,
-#                 'tax' : tax,
-#                 'grand_total' : grand_total,
-#                 'coupons' : coupons,
-#                 'discount' : discount,
-#                 #'order_number' : order_number,
-#             }
-#             print('order number in place_order:',order_number)
-#             return render(request,'orders/payments.html',context)
-        
-#     else:
-#         return redirect('checkout')  # Redirect to checkout page for other HTTP methods
-
-
 
 def cancel_order(request,order_id):
     order = get_object_or_404(Order, id=order_id)
@@ -966,7 +598,6 @@ def cancel_order(request,order_id):
         wallet.save()
         
     return redirect('my_orders') 
-
 
 
 
@@ -1045,28 +676,7 @@ def wallet(request):
         # If Wallet object doesn't exist, create one for the user
         wallet = Wallet.objects.create(user=request.user)
 
-    #  # Query the return requests associated with the current user
-    # return_requests = ReturnRequest.objects.filter(order__user=request.user)
-    # print('order is',return_requests)
-    # total_refunded_amount = sum(return_request.order.order_total for return_request in return_requests)
-
-    # # Query canceled orders associated with the current user
-    # canceled_orders = Order.objects.filter(user=request.user, status='Cancelled')
-    # total_canceled_amount = canceled_orders.aggregate(total_canceled_amount=Sum('order_total'))['total_canceled_amount'] or 0
-
-    #   # Calculate total refunded amount and total canceled amount
-    # total_refund_and_canceled_amount = total_refunded_amount + total_canceled_amount
-
-
-    # if total_refund_and_canceled_amount:
-    #     # Convert total_refunded_amount to a decimal.Decimal object
-    #     total_amount_decimal = decimal.Decimal(str(total_refund_and_canceled_amount))
-
-    #     # Add the total refunded amount to the user's wallet balance
-    #     wallet.balance = total_amount_decimal
-    #     wallet.save()
-
-        # Handle wallet deduction form submission
+    
     if request.method == 'POST':
         deduction_form = WalletDeductionForm(request.POST)
         if deduction_form.is_valid():

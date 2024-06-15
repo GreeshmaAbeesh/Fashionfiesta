@@ -109,6 +109,24 @@
             {% endfor %}
           </tbody>
         </table>
+        <!-- Pagination Controls -->
+        <div class="pagination">
+          <span class="step-links">
+              {% if page_obj.has_previous %}
+                  <a href="?page=1&date_range={{ date_range }}">&laquo; first</a>
+                  <a href="?page={{ page_obj.previous_page_number }}&date_range={{ date_range }}">previous</a>
+              {% endif %}
+
+              <span class="current">
+                  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+              </span>
+
+              {% if page_obj.has_next %}
+                  <a href="?page={{ page_obj.next_page_number }}&date_range={{ date_range }}">next</a>
+                  <a href="?page={{ page_obj.paginator.num_pages }}&date_range={{ date_range }}">last &raquo;</a>
+              {% endif %}
+          </span>
+        </div>
       </div>
       
       <!-- Bootstrap Bundle with Popper -->

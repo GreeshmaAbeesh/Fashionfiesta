@@ -73,7 +73,6 @@ def product_detail(request, category_slug, product_slug):
 
 
 
-
 def search(request):
     if 'keyword' in request.GET:    # in template name of key in search bar is given as keyword
         keyword = request.GET['keyword']    # here first check the get reques that keyword, if that keyword is present ,take its value and store it in the keyword variable
@@ -86,40 +85,7 @@ def search(request):
         'product_count' :  product_count,
     }
     return render(request, 'store/store.html',context)
-'''
-def submit_review(request, product_id):
-    # Get the product instance
-    product = get_object_or_404(PopularProduct, id=product_id)
 
-    if request.method == 'POST':
-        # Create or update review
-        try:
-            review = ReviewRating.objects.get(user=request.user, product=product)
-            form = ReviewForm(request.POST, instance=review)
-        except ReviewRating.DoesNotExist:
-            form = ReviewForm(request.POST)
-
-        if form.is_valid():
-            # Save the form data
-            form.instance.user = request.user
-            form.instance.product = product
-            form.save()
-            # Display success message
-            if review:
-                messages.success(request, 'Your review has been updated successfully.')
-            else:
-                messages.success(request, 'Your review has been submitted successfully.')
-            return redirect(request.META.get('HTTP_REFERER'))  # Redirect back to the previous page after submission
-        else:
-            # Form is invalid, show error messages
-            messages.error(request, 'Failed to submit review. Please check the form.')
-            # Optionally, print form errors for debugging
-            print(form.errors)
-            return HttpResponseBadRequest("Invalid form data")
-
-    # If request method is not POST, redirect to the product detail page
-    return redirect(product.get_url())
-'''
 
 def submit_review(request, product_id):
     url = request.META.get('HTTP_REFERER')  # The referring URL
@@ -147,26 +113,7 @@ def submit_review(request, product_id):
                 return redirect(url)
     return HttpResponse("Error: Invalid request")
     
-'''
-def filter_and_sort_products(request):
-    if request.method == 'GET':
-        min_price = request.GET.get('min_price')
-        max_price = request.GET.get('max_price')
-        
-        # Filter products based on price range
-        if min_price is not None and max_price is not None:
-            products = PopularProduct.objects.filter(price__gte=min_price, price__lte=max_price)
-        else:
-            products = PopularProduct.objects.all()
-        
-        # Sort products by price
-        sorted_products = products.order_by('price','-created_at')  # Change 'price' to '-price' for descending order
-        
-        context = {
-            'products': sorted_products
-        }
-        return render(request, 'store/store.html', context)
-'''
+
 
 
 def filter_and_sort_products(request):
@@ -183,11 +130,16 @@ def filter_and_sort_products(request):
             products = products.filter(price__gte=min_price, price__lte=max_price)
 
         # Sort products
-        if sort_by == 'price':
-            products = products.order_by('price')  # Change 'price' to '-price' for descending order
+    if sort_by:
+        if sort_by == 'price_asc':
+            products = products.order_by('price')
+        elif sort_by == 'price_desc':
+            products = products.order_by('-price')
         elif sort_by == 'newly_added':
             products = products.order_by('-created_date')
-
+        elif sort_by == 'name':
+            products = products.order_by('product_name')
+        
         context = {
             'products': products
         }
