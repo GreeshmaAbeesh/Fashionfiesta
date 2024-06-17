@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect,get_object_or_404
 from storeitem.models import PopularProduct,Variation,ProductOffer
-from orders.models import Wallet,OrderProduct,Order
+from orders.models import Wallet,OrderProduct,Order,Addresses
 from category.models import Category
 from .models import Cart,CartItem,Coupon
 from django.http import HttpResponse
@@ -100,13 +100,7 @@ def add_cart(request,product_id):
         cart_item.save()
     return redirect('cart')
 
-'''
-def view_cart(request):
-    cart_items = CartItem.objects.filter(user=request.user)
-    # Your code to render the cart items goes here 
-    print('cart_items:',cart_items)
-    return render(request, 'store/cart.html', {'cart_items': cart_items})
-'''
+
 
 def remove_cart(request, product_id,cart_item_id):                        # this function is used to reduce cart item while clicking minus button
     cart = Cart.objects.get(cart_id=_cart_id(request))
@@ -130,19 +124,6 @@ def remove_cart_item(request, product_id,cart_item_id):
     cart_item = CartItem.objects.get(product=product , cart=cart,id=cart_item_id)
     cart_item.delete()
     return redirect('cart')
-
-
-'''
-def apply_offers(product):
-    try:
-        offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
-        if offer:
-            return product.price * (1 - (offer.discount_percentage / 100))
-        else:
-            return product.price
-    except ProductOffer.DoesNotExist:
-        return product.price
-'''    
 
         
     
@@ -174,14 +155,6 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
             product = cart_item.product
             offer = ProductOffer.objects.filter(product=product, start_date__lte=timezone.now(), end_date__gte=timezone.now()).first()
             
-
-            #offer_id = request.session.get('productoffer_id')
-            #if offer_id:
-                # try:
-                #     offer_flag = ProductOffer.objects.get(id=offer_id)
-                # except ProductOffer.DoesNotExist:
-                #     offer_flag = None
-            print('offer value',offer)
             if offer:
                 cart_item.original_price = product.price  # Save the original price
                 total += (product.price * (1 - (offer.discount_percentage / 100)) * cart_item.quantity)
@@ -206,6 +179,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         savings = original_total - grand_total  # Calculate the total savings
 
 
+        
     except ObjectDoesNotExist:
         pass 
 
@@ -219,7 +193,7 @@ def cart(request, total=0, quantity=0, cart_items=None):           # to modify c
         'discount': discount,
         'offer_id': offer,
         'savings': savings, 
-       
+        
     }
 
     
@@ -275,6 +249,8 @@ def checkout(request,total=0, quantity=0, cart_items=None):
         grand_total = total + tax
         savings = original_total - grand_total  # Calculate the total savings
 
+        # Fetch saved addresses for the current user
+        addresses = Addresses.objects.filter(user=request.user)        
     except ObjectDoesNotExist:
         pass 
 
@@ -288,27 +264,10 @@ def checkout(request,total=0, quantity=0, cart_items=None):
         'coupon': coupon,
         'discount': discount,
         'savings': savings, 
+        'addresses' : addresses,
     }
     return render(request,'store/checkout.html',context)
 
-'''
-def get_best_selling_products():
-    """
-    Get the top 10 best-selling products
-    """
-    best_selling_products = OrderProduct.objects.values('product').annotate(total_sales=Count('product')).order_by('-total_sales')[:10]
-    product_ids = [item['product'] for item in best_selling_products]
-    return PopularProduct.objects.filter(id__in=product_ids)
-
-def get_best_selling_categories():
-    """
-    Get the top 10 best-selling categories
-    """
-    best_selling_categories = OrderProduct.objects.values('product__category').annotate(total_sales=Count('product__category')).order_by('-total_sales')[:10]
-    category_ids = [item['product__category'] for item in best_selling_categories]
-    return Category.objects.filter(id__in=category_ids)
-
-'''
 
 def apply_coupon(request):
     now = timezone.now()

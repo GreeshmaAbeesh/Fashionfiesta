@@ -114,18 +114,29 @@
                     {% csrf_token %}
                     <a href="#" data-toggle="collapse" data-target="#collapse_3" aria-expanded="true" class="">
                         <i class="icon-control fa fa-chevron-down"></i>
-                        <h6 class="title">Sort </h6>
+                        <h6 class="title">Sort and Filter</h6>
                     </a>
                     <div class="filter-content collapse show" id="collapse_3" style="">
                         <div class="card-body">
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label>Sort</label>
-                                    <select class="mr-2 form-control" name="sort_by_price">
-                                        <option value="price">Price</option>
-                                        <option value="newly_added">Newly Added</option>
-                                    </select>
-                                </div>
+                            <div class="form-group">
+                                <label for="sort_by">Sort by:</label>
+                                <select class="form-control" name="sort_by" id="sort_by" onchange="this.form.submit()">
+                                    <option value="">Select...</option>
+                                    <option value="price_asc" {% if request.GET.sort_by == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                                    <option value="price_desc" {% if request.GET.sort_by == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                                    <option value="newly_added" {% if request.GET.sort_by == 'newly_added' %}selected{% endif %}>Newly Added</option>
+                                    <option value="name" {% if request.GET.sort_by == 'name' %}selected{% endif %}>Name_ascending</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="min_price">Min Price:</label>
+                                <input type="number" class="form-control" name="min_price" id="min_price" value="{{ request.GET.min_price }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="max_price">Max Price:</label>
+                                <input type="number" class="form-control" name="max_price" id="max_price" value="{{ request.GET.max_price }}">
                             </div>
                             <button type="submit" class="btn btn-block btn-primary">Apply</button>
                         </div><!-- card-body.// -->

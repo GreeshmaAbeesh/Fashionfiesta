@@ -1,0 +1,257 @@
+[33mcommit c5f35a7288689ac34d7f2ec9d6a55bcd691177e2[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Jun 12 10:54:56 2024 +0530
+
+    sor & filter
+
+[33mcommit 7ce41e91ddfbf4307ddf3829ed84d634edf94342[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Jun 11 19:47:08 2024 +0530
+
+    sales report & pdf in admin side
+
+[33mcommit f0045b7dda479d7bb19061378ce94ea01d226b63[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Jun 4 19:50:29 2024 +0530
+
+    coupon correction
+
+[33mcommit 0b73e2661e8cb5395f75cef8016d2fae611ddb76[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Jun 1 13:25:27 2024 +0530
+
+    coupon & variation
+
+[33mcommit 38c9948d315c9ce326f2d32b7e793ee844c2264a[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed May 29 11:55:14 2024 +0530
+
+    Product offer,list coupon
+
+[33mcommit 6ab68587c450c1a6a0a0fc616c026a949fa1e41d[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue May 28 18:58:06 2024 +0530
+
+    Pdf,correction in wallet and coupon,remove otp,remove salesreport from user side
+
+[33mcommit 380dcd2c119169832193565af1039637f374cf37[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sun May 19 15:33:30 2024 +0530
+
+    wallet correction,coupon correction
+
+[33mcommit af17f795945d29133d667ebdbabc67aebdf7c2b5[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sun May 5 22:38:15 2024 +0530
+
+    SALES REPORT Admin side
+
+[33mcommit a45a7905b2887c464cf1c88287f72be004e3842a[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sun May 5 01:28:31 2024 +0530
+
+    WALLET COMPLETE,SALES REPORT
+
+[33mcommit 79856664371990c78ded3e06c0157519d0204da5[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat May 4 17:53:37 2024 +0530
+
+    Wallet functionality during payment
+
+[33mcommit 0b6f5515b55a40e331567220dea8d9f60bd117a1[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat May 4 11:30:50 2024 +0530
+
+    Wallet
+
+[33mcommit 10ba855d0ada8a0b25d3da9a0ccf6727180e376f[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Fri May 3 12:40:15 2024 +0530
+
+    RETURN,COUPON COMPLETE
+
+[33mcommit 60ce841b6d6c43fc1a9214ea3a9c9b7e1a6a6a01[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed May 1 12:42:39 2024 +0530
+
+    wishlist
+
+[33mcommit 0b67ca15fe3aa6ae57b1f0fdfa9957612e7656e0[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Apr 24 01:45:09 2024 +0530
+
+    SORT
+
+[33mcommit 752dad63b2cc98624ab55fb266206cf2a9dd491b[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Apr 23 19:56:09 2024 +0530
+
+    CANCEL,RETURN,STATUS,SAVE ADDRESS,COUPON
+
+[33mcommit 8d78a8c29e1928a4080c7c25e4327cacf53498d2[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sun Mar 24 21:27:42 2024 +0530
+
+    cash on delivery
+
+[33mcommit 6013759ac29186545011b20248edc31088ada31a[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Mar 23 19:48:23 2024 +0530
+
+    dashboard & rating
+
+[33mcommit 34d024d41ed154a690547f26c7057011e3a37128[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Mon Mar 18 00:31:29 2024 +0530
+
+    Orderlist,Payment,payment complete page
+
+[33mcommit 520e6586172395c23ae8c8bce86db0132f887b53[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Mar 13 11:30:48 2024 +0530
+
+    checkout
+
+[33mcommit 95992c6495a80ac4a6b78787e83d77e7557846f9[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Fri Mar 8 18:11:17 2024 +0530
+
+    cart variations
+
+[33mcommit 4fbf242205ac919030d4ce57ad097de43cedbb68[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Mar 5 09:47:40 2024 +0530
+
+    otp,custom admin,add products to database
+
+[33mcommit ec408de28477e9ee422d76cd6adbd7f5d33d540b[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 29 14:29:10 2024 +0530
+
+    cart,forgotpassword
+
+[33mcommit 463e64728fe8d6dcdbc61ace60364c786cba009f[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Feb 27 20:12:07 2024 +0530
+
+    signup,signin,home,store,product_details,out of stock
+
+[33mcommit b33f55e5d868a9f1bb22afb3aa26684ac686915d[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 02:04:49 2024 +0530
+
+    updated data
+
+[33mcommit ba15e086a99742ca8df601f1da3890f7082004ad[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 02:04:06 2024 +0530
+
+    updated data
+
+[33mcommit 0d3cf7034a2e2a867af19da7ee8b1b053bd47020[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 02:02:14 2024 +0530
+
+    updated data
+
+[33mcommit c5b9a1b390da8d3d601132b47a8558c77f714a4f[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 02:01:35 2024 +0530
+
+    updated data
+
+[33mcommit ea4cc66cb63f8217eaacb878e184a0987d1404cc[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 02:00:53 2024 +0530
+
+    updated data
+
+[33mcommit 9268a05af32efb407885120da2724e2a1f11ca1d[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Sat Feb 24 01:59:33 2024 +0530
+
+    updated data
+
+[33mcommit 88de427734d9ec4b79503c353726b5dc9d2cc6ef[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:34:29 2024 +0530
+
+    modification
+
+[33mcommit 683fcc5bc9ad9d0054e541187de39dec2f58c9f6[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:33:59 2024 +0530
+
+    initial commit
+
+[33mcommit bba322924965f5a95b4bc20d8d452f0b12904cf0[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:33:08 2024 +0530
+
+    initial commit
+
+[33mcommit de338b9410dc1310779229dacebf758cf122088a[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:32:52 2024 +0530
+
+    initial commit
+
+[33mcommit b5cd792dad4d8149cb4ef4e939041f09dc9406ef[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:32:33 2024 +0530
+
+    initial commit
+
+[33mcommit 908cc9dea7b28a1faa4542c54718a8542f8b9007[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Thu Feb 22 12:32:17 2024 +0530
+
+    initial commit
+
+[33mcommit cb8ae2af2df989b2bee861b434aea9810cf45ce9[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Feb 21 13:03:02 2024 +0530
+
+    add template folder
+
+[33mcommit 9534adaf3398da9a45e9913771d636c25938f1a5[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Feb 21 13:02:24 2024 +0530
+
+    add static folder
+
+[33mcommit f0fb0ea5dc399eaaa3b5eef3439d6c62fa04dd39[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Feb 21 13:01:45 2024 +0530
+
+    migrations
+
+[33mcommit 81f0a9f2620b8694e18e144ca29730137f1ec96b[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Feb 21 13:00:59 2024 +0530
+
+    postgreSQL
+
+[33mcommit 926186a1b5e5dca0c3985b478ed14c3bfca5e8cd[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Wed Feb 21 12:59:46 2024 +0530
+
+    frontpage
+
+[33mcommit d1e182d060c7eb32c063ffe0aca5a44d4032bdaf[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Feb 20 11:39:39 2024 +0530
+
+    initial Commit
+
+[33mcommit 7a6a0494d411754f0bde5d84e4c256929ebfec88[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Tue Feb 20 11:38:15 2024 +0530
+
+    initial Commit
+
+[33mcommit 86c13ec605cfffc953afb067f455d1a500e35459[m
+Author: greeshmaps1992@gmail.com <greeshmaps1992@gmail.com>
+Date:   Mon Feb 19 20:50:49 2024 +0530
+
+    initial Commit

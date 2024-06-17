@@ -63,6 +63,10 @@
                         <input type="text" name="country" class="form-control" required>
                     </div>
                 </div>
+                <div class="form-row">
+                    <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
+                    
+                </div>
                 <!--<div class="form-row">
                     <label for="">Order Note</label>
                     <textarea name="order_note" id="" cols="30" rows="5" class="form-control"></textarea>
@@ -79,52 +83,9 @@
     
             <div class="card">
             <div class="card-body">
-                <table class="table table-borderless table-shopping-cart">
-                    <thead class="text-muted">
-                    <tr class="small text-uppercase">
-                      <th scope="col">Product</th>
-                      <th scope="col" width="120">Quantity</th>
-                      <th scope="col" width="120">Price</th>
-                     
-                    </tr>
-                    </thead>
-                    <tbody>
                 
-                    {% for cart_item in cart_items %}
-                    <tr>
-                        <td>
-                            <figure class="itemside align-items-center">
-                                <div class="aside"><img src="{{ cart_item.product.images.url }}" class="img-sm"></div>   <!--get image in cart,this image taken from PopularProduct. product is the instance of popularproduct set in cart views-->
-                                <figcaption class="info">
-                                    <a href="{{ cart_item.product.get_url }}" class="title text-dark">{{ cart_item.product.product_name }}</a>   <!--get_url from storeitem- model-->
-                                    <p class="text-muted small">
-                                        {% if cart_item.variations.all %}
-                                            {% for item in cart_item.variations.all %}
-                                                {{item.variation_category | capfirst}} : {{item.variation_value | capfirst}}<br>    <!--this is for printing selected color and size in cart-->
-                                            {% endfor %}
-                                        {% endif %}
-                                    </p>
-                                </figcaption>
-                            </figure>
-                        </td>
-                        <td> 
-                            <!-- col.// -->
-                            <label for="">{{cart_item.quantity}}</label>
-                        </td>
-                        <td> 
-                            <div class="price-wrap"> 
-                                <var class="price">{{ cart_item.sub_total }}</var> 
-                                <small class="text-muted">₹ {{ cart_item.product.price }} </small>  <!--for printing single price-->
-                            </div> <!-- price-wrap .// -->
-                        </td>
-                       
-                    </tr>
-                    {% endfor %}
-                   
-                    </tbody>
-                </table>
                 
-                <!--<button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>-->
+                <!--<button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>
                 <div class="form-row">
                     <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
                     
@@ -132,7 +93,7 @@
                 </form>
                 <a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
                
-            </form>
+            </form>-->
 
 
             <script>
@@ -171,12 +132,7 @@
                                 <a href="{% url 'edit_address' address.id %}" class="btn btn-warning ml-2">Edit</a>
                                 <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
                                <!-- <a href="{% url 'payments' %}" class="btn btn-warning ml-2">Place Order</a> -->
-                               <form method="post" action="{% url 'place_order' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="address_id" value="{{ address.id }}">
-                                <button type="submit" class="btn btn-primary ml-2">Place Order</button>
-                                </form>
-                                
+                               
 
                             </div>
                         </div>

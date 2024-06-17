@@ -11,6 +11,69 @@
    
     <div class="row">
         <aside class="col-lg-6">
+                        <!-- Section for displaying saved billing addresses -->
+                        <div class="mt-4">
+                            <h5>Saved Billing Addresses:</h5>
+                            {% if addresses %}
+                            <div class="row">
+                                {% for address in addresses %}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Address</h5>
+                                            <p class="card-text"> {{address.first_name}}, {{address.last_name }}, {{ address.address_line_1 }}, {{ address.address_line_2 }}, {{ address.city }}, {{ address.state }}, {{ address.country }}</p>
+                                            <a href="{% url 'edit_address' address.id %}" class="btn btn-warning ml-2">Edit</a>
+                                            <button type="button" class="btn btn-danger ml-2 delete-address" data-delete-url="{% url 'delete_address' address.id %}">Delete</button>
+                                           <!-- <a href="{% url 'payments' %}" class="btn btn-warning ml-2">Place Order</a> -->
+                                           <form method="post" action="{% url 'place_order' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="address_id" value="{{ address.id }}">
+                                            <button type="submit" class="btn btn-primary ml-2">Place Order</button>
+                                            </form>
+                                            
+            
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p>.</p>
+                            {% endif %}
+                        </div>
+            
+            
+            <!-- JavaScript code to handle address deletion -->
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const deleteButtons = document.querySelectorAll(".delete-address");
+                    deleteButtons.forEach(function(button) {
+                        button.addEventListener("click", function() {
+                            const deleteUrl = button.getAttribute("data-delete-url");
+                            if (confirm("Are you sure you want to delete this address?")) {
+                                fetch(deleteUrl, {
+                                    method: "DELETE",
+                                    headers: {
+                                        "X-CSRFToken": "{{ csrf_token }}"
+                                    }
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        // Remove the deleted address from the DOM
+                                        button.closest(".col-md-4").remove();
+                                    } else {
+                                        console.error("Failed to delete address");
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error("Error:", error);
+                                });
+                            }
+                        });
+                    });
+                });
+            </script>
+
     <div class="card">
         <div class="card-body">
             <h4 class="card-title mb-4">Billing Address </h4>
@@ -70,6 +133,7 @@
           
                 <!-- Submit button for saving the new address -->
                 <!--<a href ="{% url 'checkout' %}" type="submit" class="btn btn-primary btn-block mt-3">Save Address</a>-->
+                <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
             
         </div>
     </div> <!-- card.// -->
@@ -142,7 +206,7 @@
 
                 <!--<button type="submit" name="submit" class="btn btn-primary btn-block">Place Order</button>-->
                 <div class="form-row">
-                    <button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>
+                    <!--<button id="saveAddressBtn" type="button" class="btn btn-primary btn-block mt-3">Save Address</button>-->
                     <button id="placeOrderBtn" type="button" class="btn btn-primary btn-block mt-3">Place Order</button>
                 </div>
                 </form>
@@ -176,7 +240,7 @@
             
             
 
-            <div class="mt-4">
+            <!--<div class="mt-4">
                 <h5>Saved Billing Addresses:</h5>
                 {% if addresses %}
                 <div class="row">
@@ -197,7 +261,7 @@
                 {% else %}
                 <p>.</p>
                 {% endif %}
-            </div>
+            </div>-->
 
 
             <!-- JavaScript code to handle address deletion -->

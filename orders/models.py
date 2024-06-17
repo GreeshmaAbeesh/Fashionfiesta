@@ -121,6 +121,7 @@ class Addresses(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     country = models.CharField(max_length=100)
+    order_note = models.CharField(max_length=100, blank=True)
 
     def __str__(self):
         return f"{self.first_name},{self.last_name},{self.address_line_1}, {self.city}, {self.country}"
