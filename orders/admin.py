@@ -17,15 +17,14 @@ import io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.units import inch
 from reportlab.lib.pagesizes import letter
-from django.http import HttpResponse
-from django.utils import timezone
+
 from io import BytesIO
 from reportlab.lib.styles import getSampleStyleSheet
-from django.db.models import Sum
 from django.core.paginator import Paginator
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 
 
 
@@ -117,6 +116,10 @@ class SalesReportAdmin(admin.ModelAdmin):
         elif date_range == 'weekly':
             start_date = today - timezone.timedelta(days=today.weekday())
             end_date = start_date + timezone.timedelta(days=6)
+        elif date_range == 'monthly':
+            start_date = today.replace(day=1)
+            next_month = today.replace(day=28) + timezone.timedelta(days=4)  # this will never fail
+            end_date = next_month - timezone.timedelta(days=next_month.day)
         elif date_range == 'yearly':
             start_date = today.replace(month=1, day=1)
             end_date = today.replace(month=12, day=31)
@@ -158,14 +161,10 @@ class SalesReportAdmin(admin.ModelAdmin):
             sales_report_instance.total_coupon_count = total_coupon_count
             sales_report_instance.save()
 
-         # Add pagination
+        # Add pagination
         paginator = Paginator(orders, 10)  # Show 10 orders per page
-        print('paginator is:',paginator)
         page_number = request.GET.get('page')
-        print('page_number is:',page_number)
         page_obj = paginator.get_page(page_number)
-        print('page_obj is:',page_obj)
-
 
         context = {
             'orders': orders,
@@ -179,7 +178,7 @@ class SalesReportAdmin(admin.ModelAdmin):
             'date_range': date_range,
             'page_obj': page_obj,
         }
-        
+
         return render(request, "admin/sales_report.html", context)
     
     def generate_sales_report_pdf(self, request):
@@ -192,6 +191,10 @@ class SalesReportAdmin(admin.ModelAdmin):
         elif date_range == 'weekly':
             start_date = today - timezone.timedelta(days=today.weekday())
             end_date = start_date + timezone.timedelta(days=6)
+        elif date_range == 'monthly':
+            start_date = today.replace(day=1)
+            next_month = today.replace(day=28) + timezone.timedelta(days=4)  # this will never fail
+            end_date = next_month - timezone.timedelta(days=next_month.day)
         elif date_range == 'yearly':
             start_date = today.replace(month=1, day=1)
             end_date = today.replace(month=12, day=31)
@@ -224,7 +227,6 @@ class SalesReportAdmin(admin.ModelAdmin):
         elements.append(Paragraph(f"Total Coupon Count: {total_coupon_count}", styles['Normal']))
         elements.append(Paragraph(f"Overall Sales Count: {overall_sales_count}", styles['Normal']))
         elements.append(Spacer(1, 50))
-        #elements.append(PageBreak())
 
         # Prepare table data
         data = [['S.No', 'Date', 'Order Number', 'Customer Name', 'Order Total']]
@@ -258,7 +260,6 @@ class SalesReportAdmin(admin.ModelAdmin):
         return HttpResponse(buffer, content_type='application/pdf')
 
     def get_urls(self):
-        from django.urls import path
         urls = super().get_urls()
         custom_urls = [
             path('generate_sales_report_pdf/', self.generate_sales_report_pdf, name='generate_sales_report_pdf'),
@@ -266,8 +267,6 @@ class SalesReportAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
 admin.site.register(SalesReportNew, SalesReportAdmin)
-
-
 admin.site.register(Payment)
 admin.site.register(Order,OrderAdmin)
 admin.site.register(OrderProduct)

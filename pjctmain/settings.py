@@ -109,6 +109,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',    # Set to your database host if not running locally
+        #'HOST': '3.227.184.255', 
         'PORT': '5432',         # Set to your database port if different
     }
 }
